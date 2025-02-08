@@ -9,7 +9,18 @@ export async function GET() {
 
   try {
     const cartItems = await Cart.find().populate("productId"); // join กับ collection ของสินค้า
-    return NextResponse.json(cartItems);
+    const formattedCartItems = cartItems.map((item) => ({
+      _id: item._id,
+      quantity: item.quantity,
+      product: {
+        _id: item.productId._id,
+        name: item.productId.name,
+        price: item.productId.price,
+        image: item.productId.image,
+      },
+    }));
+
+    return NextResponse.json(formattedCartItems);
   } catch (error) {
     console.error("Error fetching cart items:", error);
     return NextResponse.json(
@@ -52,29 +63,28 @@ export async function POST(req: Request) {
   }
 }
 
-// เพิ่มฟังก์ชัน DELETE สำหรับลบสินค้าใน Cart
+// ✅ ลบสินค้าใน Cart
 export async function DELETE(req: Request) {
-    await connectToDatabase();
-  
-    try {
-      const { cartItemId } = await req.json(); // รับ cartItemId ที่ต้องการลบ
-  
-      if (!cartItemId) {
-        return NextResponse.json(
-          { error: "Cart Item ID is required." },
-          { status: 400 }
-        );
-      }
-  
-      await Cart.findByIdAndDelete(cartItemId); // ลบข้อมูลออกจากฐานข้อมูล
-  
-      return NextResponse.json({ message: "Item removed from cart successfully!" });
-    } catch (error) {
-      console.error("Error removing cart item:", error);
+  await connectToDatabase();
+
+  try {
+    const { cartItemId } = await req.json(); // รับ cartItemId ที่ต้องการลบ
+
+    if (!cartItemId) {
       return NextResponse.json(
-        { error: "Failed to remove item from cart" },
-        { status: 500 }
+        { error: "Cart Item ID is required." },
+        { status: 400 }
       );
     }
+
+    await Cart.findByIdAndDelete(cartItemId); // ลบข้อมูลออกจากฐานข้อมูล
+
+    return NextResponse.json({ message: "Item removed from cart successfully!" });
+  } catch (error) {
+    console.error("Error removing cart item:", error);
+    return NextResponse.json(
+      { error: "Failed to remove item from cart" },
+      { status: 500 }
+    );
   }
-  
+}

@@ -43,24 +43,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      {/* Navbar */}
-      <header className="bg-white shadow">
-        <nav className="container mx-auto flex justify-between items-center p-4">
-          <div className="text-2xl font-bold">ShopWise</div>
-          <div>
-            <a className="mx-2" href="/">
-              Home
-            </a>
-            <a className="mx-2" href="/products">
-              Products
-            </a>
-            <a className="mx-2" href="/cart">
-              Cart
-            </a>
-          </div>
-        </nav>
-      </header>
-
       {/* Main Content */}
       <main className="container mx-auto p-4">
         {/* Recommendation Items (Carousel/Grid) */}
@@ -79,6 +61,11 @@ export default function HomePage() {
               Next
             </button>
           </div>
+        </section>
+
+        <section className="text-center my-8">
+          <h1 className="text-4xl font-bold text-blue-600">Welcome to ShopWise</h1>
+          <p className="text-gray-600 mt-2">Smart Shopping for Your IT Needs</p>
         </section>
 
         <section className="my-8">
@@ -182,11 +169,6 @@ export default function HomePage() {
           <Chatbot />
         </section>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-gray-800 text-white p-4 text-center">
-        <p>&copy; 2023 ShopWise. All rights reserved.</p>
-      </footer>
     </div>
   );
 }

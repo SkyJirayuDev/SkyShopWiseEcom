@@ -1,6 +1,7 @@
 // src/app/layout.tsx
 import type { Metadata } from 'next';
 import '../styles/globals.css';
+import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
   title: 'ShopWise',
@@ -15,12 +16,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <header className="p-4 bg-blue-600 text-white">
-          <h1 className="text-3xl font-bold">ShopWise</h1>
+        <header>
+          <Navbar />
         </header>
-        <main>{children}</main>
-        <footer className="p-4 bg-gray-200 text-center">
-          <p>&copy; 2023 ShopWise</p>
+        <main>
+          {children}
+        </main>
+        <footer className="bg-gray-800 text-white p-4 text-center">
+          <p>&copy; 2025 SkyShopWise by SkyJirayuDev. All Rights Reserved.</p>
         </footer>
       </body>
     </html>
