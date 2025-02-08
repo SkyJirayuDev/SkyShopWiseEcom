@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 interface Product {
   _id: string;
@@ -41,7 +42,7 @@ const ProductDetailPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId: product?._id, quantity: 1 }), // ส่ง productId และ quantity
       });
-      alert("Added to cart!");
+      toast.success("Added to cart!");
     } catch (error) {
       console.error("Failed to add to cart:", error);
     }
@@ -70,15 +71,15 @@ const ProductDetailPage = () => {
             });
 
             if (response.ok) {
-              alert("Added to cart!");
+              toast.success("Added to cart!");
             } else {
               const errorData = await response.json();
               console.error("Failed to add product to cart:", errorData);
-              alert("Failed to add product to cart");
+              toast.error("Failed to add product to cart");
             }
           } catch (error) {
             console.error("Error adding to cart:", error);
-            alert("An error occurred while adding to cart");
+            toast.error("An error occurred while adding to cart");
           }
         }}
         className="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"

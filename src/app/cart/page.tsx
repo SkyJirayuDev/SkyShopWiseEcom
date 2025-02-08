@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 // ✅ สร้าง Product Interface สำหรับสินค้า
 interface Product {
@@ -45,7 +46,7 @@ export default function CartPage() {
       });
 
       if (response.ok) {
-        alert("Item removed from cart!");
+        toast.success("Item removed from cart!");
         fetchCartItems(); // ✅ ดึงข้อมูลใหม่หลังจากลบ
       } else {
         console.error("Failed to remove item");
@@ -114,9 +115,9 @@ export default function CartPage() {
           const data = await response.json();
 
           if (data.message) {
-            alert("Order placed successfully!");
+            toast.success("Order placed successfully!");
           } else {
-            alert("Failed to place order.");
+            toast.error("Failed to place order.");
           }
         }}
         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4"

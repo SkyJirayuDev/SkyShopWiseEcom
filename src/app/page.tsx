@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import Link from "next/link";
 import Chatbot from "../components/Chatbot";
 
@@ -109,10 +110,10 @@ export default function HomePage() {
                         throw new Error("Failed to add to cart");
                       }
 
-                      alert("Added to cart!");
+                      toast.success("Added to cart!");
                     } catch (error) {
                       console.error("Error adding to cart:", error);
-                      alert("An error occurred while adding to cart.");
+                      toast.error("An error occurred while adding to cart.");
                     }
                   }}
                   className="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"

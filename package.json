@@ -14,7 +14,8 @@
     "next-auth": "^4.24.11",
     "openai": "^4.83.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-hot-toast": "^2.5.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

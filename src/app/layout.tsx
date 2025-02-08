@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import type { Metadata } from 'next';
+import { Toaster } from "react-hot-toast";
 import '../styles/globals.css';
 import Navbar from "@/components/Navbar";
 
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <Toaster position="top-right" reverseOrder={false} />
         <header>
           <Navbar />
         </header>
