@@ -47,7 +47,9 @@ export default function ProductsPage() {
     .filter(
       (product) =>
         (product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
+          product.description
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())) &&
         (selectedCategory === "All" || product.category === selectedCategory)
     )
     .sort((a, b) => {
@@ -102,11 +104,13 @@ export default function ProductsPage() {
               key={product._id}
               className="border rounded-lg p-4 shadow-md bg-white"
             >
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-40 object-cover rounded"
-              />
+              <div className="w-full aspect-video bg-gray-100 flex items-center justify-center overflow-hidden rounded">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-full object-contain"
+                />
+              </div>
               <h2 className="text-xl text-gray-600 font-semibold mt-4">
                 {product.name}
               </h2>
@@ -143,6 +147,31 @@ export default function ProductsPage() {
                 className="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
               >
                 Add to Cart
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch("/api/wishlist", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        userId: "demoUser",
+                        productId: product._id,
+                      }),
+                    });
+
+                    if (response.ok) {
+                      toast.success("Added to wishlist!");
+                    } else {
+                      toast.error("Failed to add to wishlist.");
+                    }
+                  } catch (error) {
+                    console.error("Error adding to wishlist:", error);
+                  }
+                }}
+                className="mt-2 text-white px-4 py-2 rounded hover:bg-pink-600"
+              >
+                💟
               </button>
             </div>
           ))}

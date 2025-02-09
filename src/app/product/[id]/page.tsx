@@ -53,11 +53,13 @@ const ProductDetailPage = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold">{product.name}</h1>
-      <img
-        src={product.image}
-        alt={product.name}
-        className="w-full h-60 object-cover rounded"
-      />
+      <div className="w-full aspect-video bg-gray-100 flex items-center justify-center overflow-hidden rounded">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-full object-contain"
+        />
+      </div>
       <p className="mt-4">{product.description}</p>
       <p className="font-bold text-xl mt-2">${product.price}</p>
 
@@ -85,6 +87,31 @@ const ProductDetailPage = () => {
         className="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
       >
         Add to Cart
+      </button>
+      <button
+        onClick={async () => {
+          try {
+            const response = await fetch("/api/wishlist", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: "demoUser",
+                productId: product._id,
+              }),
+            });
+
+            if (response.ok) {
+              toast.success("Added to wishlist!");
+            } else {
+              toast.error("Failed to add to wishlist.");
+            }
+          } catch (error) {
+            console.error("Error adding to wishlist:", error);
+          }
+        }}
+        className="mt-2 text-white px-4 py-2 rounded hover:bg-pink-600"
+      >
+        💟
       </button>
     </div>
   );

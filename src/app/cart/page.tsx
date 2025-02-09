@@ -15,7 +15,7 @@ interface Product {
 interface CartItem {
   _id: string;
   quantity: number;
-  product: Product; // ใช้ product แทน productId
+  product: Product | null; // ✅ อนุญาตให้ product เป็น null ได้
 }
 
 export default function CartPage() {
@@ -59,45 +59,66 @@ export default function CartPage() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Your Cart</h1>
-      {cartItems.map((item) => (
-        <div
-          key={item._id}
-          className="border p-4 mb-4 rounded shadow flex items-center justify-between"
-        >
-          <div className="flex items-center space-x-4">
-            <img
-              src={item.product.image}
-              alt={item.product.name}
-              className="w-20 h-20 object-cover rounded"
-            />
-            <div>
-              <h2 className="text-xl font-semibold">{item.product.name}</h2>
-              <p>Price: ${item.product.price}</p>
-              <p>Quantity: {item.quantity}</p>
-              <p>Total: ${item.product.price * item.quantity}</p>
+      {cartItems.length === 0 ? (
+        <p>Your cart is empty.</p>
+      ) : (
+        cartItems.map((item) =>
+          item.product ? ( // ✅ ตรวจสอบว่ามี product ก่อนแสดงผล
+            <div
+              key={item._id}
+              className="border p-4 mb-4 rounded shadow flex items-center justify-between"
+            >
+              <div className="flex items-center space-x-4">
+                <img
+                  src={item.product.image}
+                  alt={item.product.name}
+                  className="w-20 h-20 object-cover rounded"
+                />
+                <div>
+                  <h2 className="text-xl font-semibold">{item.product.name}</h2>
+                  <p>Price: ${item.product.price}</p>
+                  <p>Quantity: {item.quantity}</p>
+                  <p>Total: ${item.product.price * item.quantity}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleRemove(item._id)}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Remove
+              </button>
             </div>
-          </div>
-          {/* ✅ ปุ่มสำหรับลบสินค้า */}
-          <button
-            onClick={() => handleRemove(item._id)}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Remove
-          </button>
-        </div>
-      ))}
+          ) : (
+            // ✅ แสดงข้อความแจ้งถ้าไม่มีข้อมูลสินค้า
+            <div
+              key={item._id}
+              className="border p-4 mb-4 rounded shadow bg-gray-100 text-gray-500 flex justify-between items-center"
+            >
+              <p>Product not available</p>
+              <button
+                onClick={() => handleRemove(item._id)}
+                className="ml-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Remove
+              </button>
+            </div>
+          )
+        )
+      )}
       <button
         onClick={async () => {
           const userId = "demoUser"; // สมมติว่า userId เป็น demoUser
 
           // ✅ แปลง cartItems ให้อยู่ในรูปแบบที่ถูกต้อง
-          const orderItems = cartItems.map((item) => ({
-            productId: item.product._id,
-            name: item.product.name,
-            price: item.product.price,
-            quantity: item.quantity,
-            image: item.product.image,
-          }));
+          const orderItems = cartItems
+            .filter((item) => item.product) // ✅ กรองเฉพาะรายการที่มี product
+            .map((item) => ({
+              productId: item.product!._id, // ✅ ใช้เครื่องหมาย ! เพื่อบอกว่าไม่ใช่ null
+              name: item.product!.name,
+              price: item.product!.price,
+              quantity: item.quantity,
+              image: item.product!.image,
+            }));
 
           const total = orderItems.reduce(
             (acc, item) => acc + item.price * item.quantity,

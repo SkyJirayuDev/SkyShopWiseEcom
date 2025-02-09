@@ -8,17 +8,16 @@ export async function GET() {
   await connectToDatabase();
 
   try {
-    const cartItems = await Cart.find().populate("productId"); // join กับ collection ของสินค้า
-    const formattedCartItems = cartItems.map((item) => ({
-      _id: item._id,
-      quantity: item.quantity,
-      product: {
-        _id: item.productId._id,
-        name: item.productId.name,
-        price: item.productId.price,
-        image: item.productId.image,
-      },
-    }));
+    const cartItems = await Cart.find().populate("productId");
+
+    // ✅ กรองรายการที่ไม่มี productId (สินค้าถูกลบ) ออกจากผลลัพธ์
+    const formattedCartItems = cartItems
+      .filter((item) => item.productId) // ตรวจสอบว่า productId ไม่เป็น null
+      .map((item) => ({
+        _id: item._id,
+        quantity: item.quantity,
+        product: item.productId, // ข้อมูลสินค้าที่ถูก populate แล้ว
+      }));
 
     return NextResponse.json(formattedCartItems);
   } catch (error) {
@@ -79,7 +78,9 @@ export async function DELETE(req: Request) {
 
     await Cart.findByIdAndDelete(cartItemId); // ลบข้อมูลออกจากฐานข้อมูล
 
-    return NextResponse.json({ message: "Item removed from cart successfully!" });
+    return NextResponse.json({
+      message: "Item removed from cart successfully!",
+    });
   } catch (error) {
     console.error("Error removing cart item:", error);
     return NextResponse.json(

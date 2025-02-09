@@ -38,6 +38,9 @@ export default function Navbar() {
           <Link href="/orders" className="hover:text-blue-500">
             Orders
           </Link>
+          <Link href="/wishlist" className="hover:text-blue-500">
+            Wishlist
+          </Link>
           <Link href="/cart" className="relative hover:text-blue-500">
             Cart
             {cartCount > 0 && (
