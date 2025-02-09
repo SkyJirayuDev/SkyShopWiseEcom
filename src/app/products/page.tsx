@@ -76,10 +76,13 @@ export default function ProductsPage() {
           className=" text-gray-600 border p-2 rounded shadow-sm"
         >
           <option value="All">All Categories</option>
-          <option value="Laptops">Laptops</option>
           <option value="Accessories">Accessories</option>
           <option value="Audio">Audio</option>
+          <option value="Cameras">Cameras</option>
           <option value="Gaming">Gaming</option>
+          <option value="Laptops">Laptops</option>
+          <option value="Monitors">Monitors</option>
+          <option value="Storage">Storage</option>
         </select>
 
         <select

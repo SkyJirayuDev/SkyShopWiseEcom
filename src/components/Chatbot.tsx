@@ -1,41 +1,73 @@
 "use client";
-import { useState } from "react";
+
+import React, { useState } from "react";
 
 export default function Chatbot() {
   const [userInput, setUserInput] = useState("");
-  const [reply, setReply] = useState("");
+  const [messages, setMessages] = useState<{ text: string; sender: string }[]>(
+    []
+  );
 
   const handleSend = async () => {
-    const res = await fetch("/api/chatbot", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userInput }),
-    });
-    const data = await res.json();
-    setReply(data.reply);
+    if (!userInput.trim()) return;
+
+    setMessages((prev) => [...prev, { text: userInput, sender: "user" }]);
+
+    try {
+      const response = await fetch("/api/chatbot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userInput }),
+      });
+      const data = await response.json();
+
+      setMessages((prev) => [...prev, { text: data.aiMessage, sender: "bot" }]);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+
+    setUserInput("");
   };
 
   return (
-    <div className="p-4 border rounded shadow">
-      <h2 className="text-lg font-semibold mb-2">Chatbot Assistant</h2>
-      <textarea
-        className="w-full p-2 border rounded mb-2"
+    <div className="fixed bottom-4 right-4 w-80 bg-white border rounded shadow-md p-4">
+      <h1 className="text-xl font-bold mb-2">ShopWise Chatbot 🤖</h1>
+
+      <div className="h-64 overflow-y-auto border p-2 mb-2 bg-gray-50">
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`mb-2 p-2 rounded ${
+              msg.sender === "user"
+                ? "bg-blue-200 text-right"
+                : "bg-green-200 text-left"
+            }`}
+          >
+            {msg.sender === "bot" ? (
+              <div
+                dangerouslySetInnerHTML={{ __html: msg.text }}
+                className="text-sm"
+              />
+            ) : (
+              msg.text
+            )}
+          </div>
+        ))}
+      </div>
+
+      <input
+        type="text"
         value={userInput}
         onChange={(e) => setUserInput(e.target.value)}
-        placeholder="Type your query here"
+        placeholder="Ask me anything..."
+        className="w-full border p-2 rounded"
       />
       <button
-        className="px-4 py-2 bg-blue-500 text-white rounded"
         onClick={handleSend}
+        className="w-full bg-blue-500 text-white mt-2 p-2 rounded hover:bg-blue-600"
       >
         Send
       </button>
-      {reply && (
-        <div className="mt-4">
-          <strong>Response:</strong>
-          <p>{reply}</p>
-        </div>
-      )}
     </div>
   );
 }
