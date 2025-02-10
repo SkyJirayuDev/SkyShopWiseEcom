@@ -1,13 +1,14 @@
+// src/models/Wishlist.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
-interface WishlistItem extends Document {
-  userId: string;
-  productId: mongoose.Schema.Types.ObjectId;
+export interface IWishlist extends Document {
+  user: mongoose.Types.ObjectId; // เปลี่ยนจาก userId เป็น user
+  productId: mongoose.Types.ObjectId;
 }
 
-const WishlistSchema = new Schema<WishlistItem>({
-  userId: { type: String, required: true },
+const WishlistSchema = new Schema<IWishlist>({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
 });
 
-export default mongoose.models.Wishlist || mongoose.model<WishlistItem>('Wishlist', WishlistSchema);
+export default mongoose.models.Wishlist || mongoose.model<IWishlist>('Wishlist', WishlistSchema);

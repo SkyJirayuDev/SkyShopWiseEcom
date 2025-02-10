@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 
-// ✅ สร้าง Interface สำหรับ Order และ Item
+// Interface สำหรับ Order และ OrderItem (อาจปรับแก้ตาม Model ที่แก้ไขแล้ว)
 interface OrderItem {
   productId: string;
   name: string;
@@ -13,18 +15,25 @@ interface OrderItem {
 
 interface Order {
   _id: string;
-  userId: string;
+  // ไม่จำเป็นต้องมี userId เพราะเราจะใช้ session แทน
   items: OrderItem[];
   total: number;
   createdAt: string;
 }
 
 export default function OrderHistoryPage() {
+  const { data: session, status } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
+    if (status === "loading") return; // รอให้ session โหลดเสร็จ
+    if (!session) {
+      setError("Please log in to view your orders.");
+      return;
+    }
     fetchOrders();
-  }, []);
+  }, [session, status]);
 
   const fetchOrders = async () => {
     try {
@@ -32,21 +41,32 @@ export default function OrderHistoryPage() {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "user-id": "demoUser", // ✅ ระบุ user-id ให้ตรงกับ user ที่สั่งซื้อ
+          // ไม่ต้องส่ง header user-id เพราะ API จะดึงจาก session
         },
       });
-
       if (!response.ok) {
         throw new Error("Failed to fetch orders");
       }
-
       const data = await response.json();
-      console.log("Fetched Orders:", data); // ✅ ตรวจสอบข้อมูลที่ดึงมาได้
+      console.log("Fetched Orders:", data);
       setOrders(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching orders:", error);
+      setError(error.message || "Failed to fetch orders");
     }
   };
+
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+  if (!session) {
+    return (
+      <div className="container mx-auto p-4">
+        <p>{error}</p>
+        <Link href="/login">Go to Login</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -57,9 +77,10 @@ export default function OrderHistoryPage() {
         orders.map((order) => (
           <div key={order._id} className="border p-4 mb-4 rounded shadow">
             <h2 className="text-xl font-semibold">Order ID: {order._id}</h2>
-            <p className="text-gray-600">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+            <p className="text-gray-600">
+              Date: {new Date(order.createdAt).toLocaleDateString()}
+            </p>
             <p className="font-bold">Total: ${order.total}</p>
-
             <div className="mt-4">
               {order.items.map((item) => (
                 <div key={item.productId} className="flex items-center mb-2">

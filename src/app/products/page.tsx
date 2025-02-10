@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import ProductCard from "@/components/ProductCard";
 
 interface Product {
   _id: string;
@@ -42,14 +43,11 @@ export default function ProductsPage() {
     fetchProducts();
   }, []);
 
-  // ✅ Filtering & Sorting
   const filteredProducts = products
     .filter(
       (product) =>
         (product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase())) &&
+          product.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
         (selectedCategory === "All" || product.category === selectedCategory)
     )
     .sort((a, b) => {
@@ -60,7 +58,7 @@ export default function ProductsPage() {
 
   return (
     <div className="container mx-auto p-4">
-      {/* ✅ Search, Filter, Sort */}
+      {/* Search, Filter, Sort */}
       <div className="flex justify-center mb-6 space-x-4">
         <input
           type="text"
@@ -69,11 +67,10 @@ export default function ProductsPage() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="border border-gray-300 p-2 rounded-md w-1/3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
-
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className=" text-gray-600 border p-2 rounded shadow-sm"
+          className="text-gray-600 border p-2 rounded shadow-sm"
         >
           <option value="All">All Categories</option>
           <option value="Accessories">Accessories</option>
@@ -84,11 +81,10 @@ export default function ProductsPage() {
           <option value="Monitors">Monitors</option>
           <option value="Storage">Storage</option>
         </select>
-
         <select
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value)}
-          className=" text-gray-600 border p-2 rounded shadow-sm"
+          className="text-gray-600 border p-2 rounded shadow-sm"
         >
           <option value="default">Sort By</option>
           <option value="asc">Price: Low to High</option>
@@ -103,80 +99,7 @@ export default function ProductsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
-            <div
-              key={product._id}
-              className="border rounded-lg p-4 shadow-md bg-white"
-            >
-              <div className="w-full aspect-video bg-gray-100 flex items-center justify-center overflow-hidden rounded">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <h2 className="text-xl text-gray-600 font-semibold mt-4">
-                {product.name}
-              </h2>
-              <p className="text-gray-600">{product.description}</p>
-              <p className="text-gray-600 font-bold mt-2">${product.price}</p>
-              <Link
-                href={`/product/${product._id}`}
-                className="mt-3 inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                View Details
-              </Link>
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch("/api/cart", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        productId: product._id,
-                        quantity: 1,
-                      }),
-                    });
-
-                    if (!response.ok) {
-                      throw new Error("Failed to add to cart");
-                    }
-
-                    toast.success("Added to cart!");
-                  } catch (error) {
-                    console.error("Error adding to cart:", error);
-                    toast.error("An error occurred while adding to cart.");
-                  }
-                }}
-                className="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-              >
-                Add to Cart
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch("/api/wishlist", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        userId: "demoUser",
-                        productId: product._id,
-                      }),
-                    });
-
-                    if (response.ok) {
-                      toast.success("Added to wishlist!");
-                    } else {
-                      toast.error("Failed to add to wishlist.");
-                    }
-                  } catch (error) {
-                    console.error("Error adding to wishlist:", error);
-                  }
-                }}
-                className="mt-2 text-white px-4 py-2 rounded hover:bg-pink-600"
-              >
-                💟
-              </button>
-            </div>
+            <ProductCard key={product._id} product={product} />
           ))}
         </div>
       )}

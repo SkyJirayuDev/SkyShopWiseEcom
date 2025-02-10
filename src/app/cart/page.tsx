@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
-// ✅ สร้าง Product Interface สำหรับสินค้า
+// Interface สำหรับ Product และ CartItem
 interface Product {
   _id: string;
   name: string;
@@ -11,50 +13,71 @@ interface Product {
   image: string;
 }
 
-// ✅ ปรับปรุง CartItem Interface ให้ใช้ Product
 interface CartItem {
   _id: string;
   quantity: number;
-  product: Product | null; // ✅ อนุญาตให้ product เป็น null ได้
+  product: Product | null;
 }
 
 export default function CartPage() {
+  const { data: session, status } = useSession();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [error, setError] = useState<string>("");
 
-  // ✅ ดึงข้อมูลสินค้าใน Cart
   useEffect(() => {
+    if (status === "loading") return;
+    if (!session) {
+      setError("Please log in to view your cart.");
+      return;
+    }
     fetchCartItems();
-  }, []);
+  }, [session, status]);
 
   const fetchCartItems = async () => {
     try {
       const response = await fetch("/api/cart", { method: "GET" });
+      if (!response.ok) {
+        throw new Error("Failed to fetch cart items");
+      }
       const data = await response.json();
       setCartItems(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch cart items:", error);
+      setError(error.message || "Failed to fetch cart items");
     }
   };
 
-  // ✅ ฟังก์ชันสำหรับลบสินค้าออกจาก Cart
   const handleRemove = async (cartItemId: string) => {
     try {
       const response = await fetch("/api/cart", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cartItemId }), // ส่ง cartItemId ไปที่ API
+        body: JSON.stringify({ cartItemId }),
       });
-
       if (response.ok) {
         toast.success("Item removed from cart!");
-        fetchCartItems(); // ✅ ดึงข้อมูลใหม่หลังจากลบ
+        fetchCartItems();
       } else {
         console.error("Failed to remove item");
+        toast.error("Failed to remove item");
       }
     } catch (error) {
       console.error("Error removing item:", error);
+      toast.error("Error removing item");
     }
   };
+
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+  if (!session) {
+    return (
+      <div className="container mx-auto p-4">
+        <p>{error}</p>
+        <Link href="/login">Go to Login</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -63,7 +86,7 @@ export default function CartPage() {
         <p>Your cart is empty.</p>
       ) : (
         cartItems.map((item) =>
-          item.product ? ( // ✅ ตรวจสอบว่ามี product ก่อนแสดงผล
+          item.product ? (
             <div
               key={item._id}
               className="border p-4 mb-4 rounded shadow flex items-center justify-between"
@@ -89,7 +112,6 @@ export default function CartPage() {
               </button>
             </div>
           ) : (
-            // ✅ แสดงข้อความแจ้งถ้าไม่มีข้อมูลสินค้า
             <div
               key={item._id}
               className="border p-4 mb-4 rounded shadow bg-gray-100 text-gray-500 flex justify-between items-center"
@@ -105,46 +127,6 @@ export default function CartPage() {
           )
         )
       )}
-      <button
-        onClick={async () => {
-          const userId = "demoUser"; // สมมติว่า userId เป็น demoUser
-
-          // ✅ แปลง cartItems ให้อยู่ในรูปแบบที่ถูกต้อง
-          const orderItems = cartItems
-            .filter((item) => item.product) // ✅ กรองเฉพาะรายการที่มี product
-            .map((item) => ({
-              productId: item.product!._id, // ✅ ใช้เครื่องหมาย ! เพื่อบอกว่าไม่ใช่ null
-              name: item.product!.name,
-              price: item.product!.price,
-              quantity: item.quantity,
-              image: item.product!.image,
-            }));
-
-          const total = orderItems.reduce(
-            (acc, item) => acc + item.price * item.quantity,
-            0
-          );
-
-          console.log("Order Items:", orderItems); // ✅ ตรวจสอบก่อนส่งข้อมูล
-
-          const response = await fetch("/api/orders", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, cartItems: orderItems, total }),
-          });
-
-          const data = await response.json();
-
-          if (data.message) {
-            toast.success("Order placed successfully!");
-          } else {
-            toast.error("Failed to place order.");
-          }
-        }}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4"
-      >
-        Place Order
-      </button>
     </div>
   );
 }

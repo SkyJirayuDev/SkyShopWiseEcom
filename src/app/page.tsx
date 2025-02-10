@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import Chatbot from "../components/Chatbot";
+import ProductCard from "../components/ProductCard"; // Import ProductCard
 
 interface Product {
   _id: string;
@@ -26,10 +27,8 @@ export default function HomePage() {
         console.log("Fetched products:", data);
 
         if (Array.isArray(data)) {
-          // ถ้า API ส่ง array ตรงๆ
           setProducts(data.slice(0, 6));
         } else if (data.products && Array.isArray(data.products)) {
-          // ถ้า API ส่งมาในรูปแบบ { products: [...] }
           setProducts(data.products.slice(0, 6));
         } else {
           console.error("Invalid products data:", data);
@@ -44,7 +43,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      {/* Main Content */}
       <main className="container mx-auto p-4">
         {/* Recommendation Items (Carousel/Grid) */}
         <section className="my-8">
@@ -75,85 +73,11 @@ export default function HomePage() {
           <h1 className="text-3xl font-bold text-center mb-6">
             Featured Products
           </h1>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {products.map((product) => (
-              <div
-                key={product._id}
-                className="border rounded-lg p-4 shadow-md bg-white"
-              >
-                <div className="w-full aspect-video bg-gray-100 flex items-center justify-center overflow-hidden rounded">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <h2 className="text-xl font-semibold mt-4">{product.name}</h2>
-                <p className="text-gray-600">{product.description}</p>
-                <p className="font-bold mt-2">${product.price}</p>
-                <Link
-                  href={`/product/${product._id}`}
-                  className="mt-3 inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  View Details
-                </Link>
-                <button
-                  onClick={async () => {
-                    try {
-                      const response = await fetch("/api/cart", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          productId: product._id, // ✅ ส่งแค่ productId
-                          quantity: 1, // ✅ ระบุจำนวนสินค้า
-                        }),
-                      });
-
-                      if (!response.ok) {
-                        throw new Error("Failed to add to cart");
-                      }
-
-                      toast.success("Added to cart!");
-                    } catch (error) {
-                      console.error("Error adding to cart:", error);
-                      toast.error("An error occurred while adding to cart.");
-                    }
-                  }}
-                  className="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                >
-                  Add to Cart
-                </button>
-                <button
-                  onClick={async () => {
-                    try {
-                      const response = await fetch("/api/wishlist", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          userId: "demoUser",
-                          productId: product._id,
-                        }),
-                      });
-
-                      if (response.ok) {
-                        toast.success("Added to wishlist!");
-                      } else {
-                        toast.error("Failed to add to wishlist.");
-                      }
-                    } catch (error) {
-                      console.error("Error adding to wishlist:", error);
-                    }
-                  }}
-                  className="mt-2 text-white px-4 py-2 rounded hover:bg-pink-600"
-                >
-                  💟
-                </button>
-              </div>
+              <ProductCard key={product._id} product={product} />
             ))}
           </div>
-
-          {/* ปุ่มลิงก์ไปหน้าสินค้าทั้งหมด */}
           <div className="text-center mt-8">
             <Link
               href="/products"
@@ -174,7 +98,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Featured Products */}
+        {/* Featured Products (อีกส่วน) */}
         <section className="my-8">
           <h2 className="text-xl font-semibold mb-4">Featured Products</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

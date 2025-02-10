@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { signIn, signOut, useSession } from "next-auth/react";
 
 export default function Navbar() {
   const [cartCount, setCartCount] = useState(0);
+  const { data: session, status } = useSession();
 
   // ดึงจำนวนสินค้าจาก Cart
   useEffect(() => {
@@ -28,7 +30,7 @@ export default function Navbar() {
           ShopWise
         </Link>
 
-        <div className="space-x-6">
+        <div className="space-x-6 flex items-center">
           <Link href="/" className="hover:text-blue-500">
             Home
           </Link>
@@ -49,6 +51,31 @@ export default function Navbar() {
               </span>
             )}
           </Link>
+
+          {/* ตรวจสอบ session */}
+          {status === "loading" ? null : session ? (
+            <>
+              <span className="ml-4">Hi, {session.user?.name || session.user?.email}</span>
+              <button
+                onClick={() => signOut()}
+                className="ml-4 hover:text-blue-500"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => signIn()}
+                className="ml-4 hover:text-blue-500"
+              >
+                Login
+              </button>
+              <Link href="/signup" className="ml-4 hover:text-blue-500">
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
