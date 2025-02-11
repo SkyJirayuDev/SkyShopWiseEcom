@@ -27,7 +27,7 @@ export default function Navbar() {
     <nav className="bg-gray-800 text-white shadow-md">
       <div className="container mx-auto flex justify-between items-center p-4">
         <Link href="/" className="text-2xl font-bold">
-          ShopWise
+          SkyShopWise
         </Link>
 
         <div className="space-x-6 flex items-center">
