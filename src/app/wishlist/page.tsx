@@ -7,7 +7,7 @@ import Link from "next/link";
 
 interface WishlistItem {
   _id: string;
-  product: {
+  product?: {
     _id: string;
     name: string;
     price: number;
@@ -63,34 +63,45 @@ export default function WishlistPage() {
       ) : (
         wishlistItems.map((item) => (
           <div key={item._id} className="border p-4 mb-4 rounded shadow">
-            <img
-              src={item.product.image}
-              alt={item.product.name}
-              className="w-20 h-20 object-cover rounded"
-            />
-            <h2 className="text-xl">{item.product.name}</h2>
-            <p>Price: ${item.product.price}</p>
+            {item.product ? (
+              <>
+                <img
+                  src={item.product.image}
+                  alt={item.product.name}
+                  className="w-20 h-20 object-cover rounded"
+                />
+                <h2 className="text-xl">{item.product.name}</h2>
+                <p>Price: ${item.product.price}</p>
+              </>
+            ) : (
+              <div className="p-2">
+                <p className="text-gray-500">Product not available</p>
+              </div>
+            )}
             <button
               onClick={async () => {
                 try {
+                  const removePayload: { productId?: string } = {
+                    productId: item.product ? item.product._id : undefined,
+                  };
                   const response = await fetch("/api/wishlist", {
                     method: "DELETE",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      productId: item.product._id,
-                    }),
+                    body: JSON.stringify(removePayload),
                   });
                   if (!response.ok) {
                     throw new Error("Failed to remove item from wishlist");
                   }
                   toast.success("Removed from wishlist!");
-                  setWishlistItems((prev) => prev.filter((w) => w._id !== item._id));
+                  setWishlistItems((prev) =>
+                    prev.filter((w) => w._id !== item._id)
+                  );
                 } catch (err) {
                   console.error(err);
                   toast.error("Failed to remove item.");
                 }
               }}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mt-2"
             >
               Remove from Wishlist
             </button>

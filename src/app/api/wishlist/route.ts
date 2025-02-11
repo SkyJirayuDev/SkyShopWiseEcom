@@ -4,7 +4,6 @@ import Wishlist from '@/models/Wishlist';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]/route';
 
-// ดึงข้อมูล Wishlist สำหรับผู้ใช้ที่ล็อกอินอยู่
 export async function GET(req: Request) {
   await connectToDatabase();
   try {
@@ -13,15 +12,24 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const wishlistItems = await Wishlist.find({ user: session.user.id }).populate('productId');
-    return NextResponse.json(wishlistItems);
+    // Query wishlist items ของผู้ใช้ที่ล็อกอินอยู่
+    const wishlistItems = await Wishlist.find({ user: session.user.id })
+      .populate('productId') // ดึงข้อมูลสินค้า (Product)
+      .lean();
+
+    // เปลี่ยนชื่อฟิลด์ productId เป็น product ให้ตรงกับที่ UI คาดหวัง
+    const renamedItems = wishlistItems.map((item) => ({
+      ...item,
+      product: item.productId,
+    }));
+
+    return NextResponse.json(renamedItems);
   } catch (error) {
     console.error("Error fetching wishlist:", error);
     return NextResponse.json({ error: 'Failed to fetch wishlist' }, { status: 500 });
   }
 }
 
-// เพิ่มสินค้าลงใน Wishlist สำหรับผู้ใช้ที่ล็อกอินอยู่
 export async function POST(req: Request) {
   await connectToDatabase();
   try {
@@ -48,7 +56,6 @@ export async function POST(req: Request) {
   }
 }
 
-// ลบสินค้าจาก Wishlist สำหรับผู้ใช้ที่ล็อกอินอยู่
 export async function DELETE(req: Request) {
   await connectToDatabase();
   try {
