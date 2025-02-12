@@ -29,7 +29,7 @@ export default function ProductCard({
 
   const handleAddToCart = async () => {
     if (!session) {
-      toast.error("โปรด login ก่อน");
+      toast.error("An error occurred while adding the item to your cart. Please log in to continue.");
       return;
     }
     try {
@@ -55,7 +55,7 @@ export default function ProductCard({
 
   const handleAddToWishlist = async () => {
     if (!session) {
-      toast.error("โปรด login ก่อน");
+      toast.error("Failed to add to wishlist. Please log in to continue.");
       return;
     }
     try {

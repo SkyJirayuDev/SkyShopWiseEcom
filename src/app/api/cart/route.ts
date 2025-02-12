@@ -1,8 +1,10 @@
+// src/app/api/cart/route.ts
+
 import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import Cart from "@/models/Cart";
 import Product from "@/models/Product"; // สำหรับ populate ข้อมูลสินค้า
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 
 // ดึงข้อมูลสินค้าที่อยู่ใน Cart เฉพาะของผู้ใช้ที่ล็อกอินอยู่
@@ -10,8 +12,10 @@ export async function GET() {
   await connectToDatabase();
   try {
     const session = await getServerSession(authOptions);
+    
+    // ถ้าไม่มี session (ยังไม่ได้ login) คืนค่าอาร์เรย์ว่างแทนที่จะคืน error 401
     if (!session || !session.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json([]);
     }
 
     const cartItems = await Cart.find({ user: session.user.id }).populate("productId");
