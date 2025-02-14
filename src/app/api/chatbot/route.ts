@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import Product from "@/models/Product";
 import OpenAI from "openai";
-import Fuse from "fuse.js";
 
 // เชื่อมต่อ OpenAI โดยใช้ API key จาก environment variable
 const openai = new OpenAI({
@@ -15,127 +14,66 @@ export async function POST(req: Request) {
   await connectToDatabase();
 
   try {
+    // รับคำถามจากลูกค้า
     const { userInput } = await req.json();
 
-    // 1. แปลงข้อความผู้ใช้เป็น lower-case และแยกเป็น tokens
-    const lowerInput = userInput.toLowerCase();
-    const tokens = lowerInput.split(/\s+/);
-
-    // 2. ดึงสินค้าทั้งหมดจากฐานข้อมูล
+    // 1. ดึงข้อมูลสินค้าทั้งหมดจากฐานข้อมูล
     const products = await Product.find({}).lean();
 
-    // 3. คัดกรอง tokens โดยดูว่ามี token ไหนปรากฏในสินค้า (name, description, category)
-    const validTokens = tokens.filter((token: string) =>
-      products.some(product => {
-        const text = `${product.name} ${product.description} ${product.category}`.toLowerCase();
-        return text.includes(token);
-      })
-    );
+    // 2. สร้างข้อความ context สำหรับสินค้าทั้งหมด
+    let productContext: string = "";
+    products.forEach((product: any): void => {
+      productContext += `ID: ${product._id}\nName: ${product.name}\nDescription: ${product.description}\nCategory: ${product.category}\nPrice: $${product.price}\n\n`;
+    });
 
-    // 4. สร้าง refined query จาก valid tokens (ถ้ามี) หรือใช้ lowerInput ถ้าไม่มี token ใดตรงกับสินค้าก็ให้ใช้ totalidad
-    const refinedQuery = validTokens.length > 0 ? validTokens.join(" ") : lowerInput;
+    // 3. กำหนด Base URL สำหรับลิงก์สินค้า
+    const baseUrl: string = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-    // 5. กำหนด Fuse.js options โดยปรับ weight และ threshold ให้เหมาะสม
-    const fuseOptions = {
-      keys: [
-        { name: "name", weight: 0.7 },
-        { name: "description", weight: 0.3 },
-        { name: "category", weight: 0.1 },
-      ],
-      includeScore: true,
-      threshold: 0.4,
-    };
+    // 4. สร้าง prompt สำหรับ OpenAI ด้วยคำสั่งที่ชัดเจน
+    const systemMessage: string = `You are a friendly and knowledgeable shopping assistant.
+Your task is to answer the customer's query using only the product information provided below.
+Each product is described with its ID, Name, Description, Category, and Price.
 
-    const fuse = new Fuse(products, fuseOptions);
-    const fuzzyResults = fuse.search(refinedQuery);
-    let matchedProducts = fuzzyResults.map(result => result.item);
+Product List:
+${productContext}
 
-    // 6. หาก query มีหลาย token ให้กรองผลลัพธ์เพิ่มเติมโดยเช็คว่ามี token ที่ปรากฏอยู่ใน fields ของสินค้า
-    if (tokens.length > 1) {
-      const filteredProducts = matchedProducts.filter(product => {
-        const name = product.name?.toLowerCase() || "";
-        const description = product.description?.toLowerCase() || "";
-        const category = product.category?.toLowerCase() || "";
-        return tokens.some((token: string) => 
-          name.includes(token) || description.includes(token) || category.includes(token)
-        );
-      });
-      if (filteredProducts.length > 0) {
-        matchedProducts = filteredProducts;
-      }
-    }
+Customer Query: "${userInput}"
 
-    // 7. Fallback: หาก Fuse.js ไม่พบสินค้า ให้ใช้ substring search
-    if (matchedProducts.length === 0) {
-      matchedProducts = products.filter(product => {
-        const name = product.name?.toLowerCase() || "";
-        const description = product.description?.toLowerCase() || "";
-        const category = product.category?.toLowerCase() || "";
-        return (
-          name.includes(refinedQuery) ||
-          description.includes(refinedQuery) ||
-          category.includes(refinedQuery)
-        );
-      });
-    }
+Instructions:
+1. Analyze the customer's query to determine:
+   - The intended product type (e.g., "mouse", "laptop", "keyboard", "monitor", "graphics card", etc.).
+   - The required attributes (e.g., "wireless", "Bluetooth support", "mechanical", "Intel-based", "on sale", etc.).
+   - Any numerical constraints (e.g., "under $1,000" or a specific price range).
+2. Identify the set of products that EXACTLY match all these criteria.
+   - An exact match means that the product’s Name or Description explicitly indicates the intended product type, includes all required attributes, and meets any numerical constraints.
+3. If one or more exact matches are found, list them on separate lines in the following format:
+   <a href="${baseUrl}/product/{ID}" target="_blank" style="color: blue; text-decoration: underline;">{Product Name}</a> - $ {Price}
+4. If no products exactly match the criteria, start your answer with:
+   "Unfortunately, there are no products that exactly match your criteria."
+   Then, if available, list the closest available matches from the same intended product category as alternatives.
+   - Precede these alternatives with a note such as: "However, here are the closest available matches:" and briefly explain why they are the closest (e.g., "This option does not fully meet the price criteria" or "This product does not include the specified attribute").
+5. Ensure that only products of the intended type are included. For example, for a query like "Show me the latest wireless mice", only include products whose Name or Description clearly indicate they are a "mouse" (or "mice") and that include "wireless" if specified.
+6. Respond in a natural, concise, and friendly tone. Invite further questions if needed.
 
-    // 8. สร้าง context สำหรับ AI โดยใช้สินค้าที่พบ
-    let productContext = "";
-    if (matchedProducts.length > 0) {
-      productContext = "Available products:\n";
-      matchedProducts.forEach(product => {
-        productContext += `- ${product.name}: ${product.description} [Category: ${product.category}]\n`;
-      });
-    } else {
-      productContext = "No matching products found in our database.";
-    }
+Please provide your answer accordingly.`;
 
-    // 9. สร้าง messages สำหรับ prompt ของ OpenAI
+    // 5. สร้าง messages สำหรับส่งให้ OpenAI
     const messages = [
-      {
-        role: "system",
-        content: `You are a helpful shopping assistant. Use the following product information to answer the user's question only based on available products:\n\n${productContext}`,
-      },
-      {
-        role: "user",
-        content: userInput,
-      },
+      { role: "system", content: systemMessage },
+      { role: "user", content: userInput },
     ];
 
-    // Due to type mismatches ใน type definitions ของ OpenAI,
-    // เราจึงใช้ type assertion เพื่อบังคับให้ TypeScript ยอมรับค่า messages
+    // 6. ขอคำตอบจาก OpenAI
     const chatResponse = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: messages as unknown as any,
     });
 
-    const aiMessage = chatResponse.choices[0]?.message.content || "";
+    const aiMessage: string = chatResponse.choices[0]?.message.content || "";
 
-    // 10. สร้างลิงก์สำหรับสินค้าที่ตรงกัน (ถ้ามี)
-    let productLinks = "";
-    if (matchedProducts.length > 0) {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-      productLinks = matchedProducts
-        .map(
-          product =>
-            `<a href="${baseUrl}/product/${product._id}" target="_blank" style="color: blue; text-decoration: underline;">${product.name}</a> - $${product.price}`
-        )
-        .join("<br>");
-    }
-
-    // 11. ผสานข้อความจาก AI กับลิงก์สินค้า (ถ้ามี)
-    const combinedMessage = matchedProducts.length
-      ? `${aiMessage}<br><br><strong>Here are some products you might be interested in:</strong><br>${productLinks}`
-      : aiMessage;
-
-    return NextResponse.json({
-      aiMessage: combinedMessage,
-    });
+    return NextResponse.json({ aiMessage });
   } catch (error) {
     console.error("Error in chatbot API:", error);
-    return NextResponse.json(
-      { error: "Failed to process chatbot request" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to process chatbot request" }, { status: 500 });
   }
 }
