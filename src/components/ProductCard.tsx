@@ -13,6 +13,7 @@ interface Product {
   image: string;
   category?: string;
   stock?: number;
+  inWishlist?: boolean;
 }
 
 interface ProductCardProps {
@@ -79,48 +80,61 @@ export default function ProductCard({
   };
 
   return (
-    <div className="border rounded-lg p-4 shadow-md bg-white flex flex-col h-full">
-      {/* ส่วนแสดงภาพสินค้า */}
-      <div className="w-full aspect-video bg-gray-100 flex items-center justify-center overflow-hidden rounded">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-contain"
-        />
-      </div>
-
-      {/* ส่วนเนื้อหาสินค้า */}
-      <div className="mt-4 flex-1">
-        <h2 className="text-gray-600 text-xl font-semibold">{product.name}</h2>
-        {/* ใช้ line-clamp-3 เพื่อตัดรายละเอียดสินค้าหากยาวเกิน 3 บรรทัด */}
-        <p className="text-gray-600 overflow-hidden text-ellipsis line-clamp-3">
+    <div className="border rounded-lg p-2 sm:p-4 shadow-md bg-white flex flex-col h-full transition-all duration-300 hover:shadow-xl">
+      {/* ส่วนแสดงภาพสินค้า - ทำให้รูปภาพคลิกได้ */}
+      <Link href={`/product/${product._id}`}>
+        <div className="w-full aspect-video bg-gray-100 flex items-center justify-center overflow-hidden rounded relative cursor-pointer">
+          <img 
+            src={product.image} 
+            alt={product.name} 
+            className="w-full h-full object-contain transition-transform duration-500 hover:scale-105" 
+          />
+          
+          {/* Wishlist button repositioned to top right with star icon */}
+          {showButtons && (
+            <button
+              onClick={(e) => {
+                e.preventDefault(); // ป้องกันการเปิดลิงก์เมื่อคลิกปุ่ม wishlist
+                handleAddToWishlist();
+              }}
+              className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-white bg-opacity-75 hover:bg-opacity-100 p-1 sm:p-2 rounded-full shadow-md transition-all duration-300 hover:transform hover:scale-110 text-base sm:text-lg"
+              aria-label="Add to wishlist"
+            >
+              {product.inWishlist ? (
+                <span className="text-yellow-500 transition-colors duration-300">★</span>
+              ) : (
+                <span className="text-gray-400 transition-colors duration-300">☆</span>
+              )}
+            </button>
+          )}
+        </div>
+      </Link>
+  
+      {/* ส่วนเนื้อหาสินค้า - ทำให้ชื่อสินค้าคลิกได้ */}
+      <div className="mt-2 sm:mt-4 flex-1">
+        <Link href={`/product/${product._id}`}>
+          <h2 className="text-gray-800 text-sm sm:text-base md:text-lg lg:text-xl font-semibold transition-colors duration-300 hover:text-blue-600 line-clamp-1 cursor-pointer">
+            {product.name}
+          </h2>
+        </Link>
+        
+        {/* ใช้ line-clamp-2 เพื่อตัดรายละเอียดสินค้าหากยาวเกิน 2 บรรทัด */}
+        <p className="text-gray-600 text-xs sm:text-sm overflow-hidden text-ellipsis line-clamp-2 mt-1 sm:mt-2">
           {product.description}
         </p>
-        <p className="text-gray-600 font-bold mt-2">${product.price}</p>
+        <p className="text-gray-800 font-bold mt-1 sm:mt-3 text-sm sm:text-base md:text-lg lg:text-xl">
+          ${product.price}
+        </p>
       </div>
-
-      {/* ส่วนปุ่มด้านล่าง */}
+  
+      {/* ส่วนปุ่มด้านล่าง - มีเฉพาะปุ่ม Add to Cart */}
       {showButtons && (
-        <div className="mt-3 flex space-x-2">
-          <div className="flex-1 flex space-x-2">
-            <Link
-              href={`/product/${product._id}`}
-              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded text-center hover:bg-blue-700"
-            >
-              View Details
-            </Link>
-            <button
-              onClick={handleAddToCart}
-              className="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Add to Cart
-            </button>
-          </div>
+        <div className="mt-2 sm:mt-4">
           <button
-            onClick={handleAddToWishlist}
-            className="text-white px-4 py-2 rounded hover:bg-pink-600"
+            onClick={handleAddToCart}
+            className="w-full bg-green-500 text-white px-2 sm:px-4 py-1 sm:py-2 rounded font-medium transition-all duration-300 hover:bg-green-600 transform hover:-translate-y-1 text-xs sm:text-sm md:text-base"
           >
-            💟
+            Add to Cart
           </button>
         </div>
       )}
