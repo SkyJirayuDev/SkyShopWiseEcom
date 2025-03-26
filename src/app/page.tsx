@@ -228,10 +228,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Chatbot */}
+        {/* Chatbot
         <section className="text-center w-full">
           <Chatbot />
-        </section>
+        </section> */}
       </main>
     </div>
   );
