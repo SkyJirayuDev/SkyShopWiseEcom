@@ -2,8 +2,9 @@
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import Chatbot from "../components/Chatbot";
+import { useSession } from "next-auth/react"; // ใช้ useSession สำหรับการเช็คการล็อกอิน
 import ProductCard from "../components/ProductCard";
+import Chatbot from "../components/Chatbot";
 
 interface Product {
   _id: string;
@@ -16,8 +17,10 @@ interface Product {
 }
 
 export default function HomePage() {
+  const { data: session, status } = useSession(); // ดึงข้อมูล session และ status
   const [products, setProducts] = useState<Product[]>([]);
   const [productsFeature, setProductsFeature] = useState<Product[]>([]);
+  const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]); // เพิ่ม state สำหรับ Recently Viewed
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -62,6 +65,39 @@ export default function HomePage() {
     fetchProductsFeature();
   }, []);
 
+  useEffect(() => {
+    const fetchRecentlyViewed = async () => {
+      try {
+        console.log('Session:', session); // ตรวจสอบว่า session มีข้อมูลหรือไม่
+        if (session?.user?.id) {
+          const userId = session.user.id;
+          const response = await fetch(`/api/recentlyViewed?userId=${userId}`, {
+            method: 'GET',
+            credentials: 'include', // เพิ่มการส่ง cookies หรือ tokens ที่จำเป็น
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Recently viewed data:', data); // ตรวจสอบข้อมูลที่ได้รับจาก API
+            if (Array.isArray(data) && data.length > 0) {
+              setRecentlyViewed(data);
+            } else {
+              setRecentlyViewed([]); // หากไม่มี recently viewed items
+            }
+          } else {
+            console.error("Failed to fetch recently viewed items.");
+          }
+        } else {
+          console.log("User is not logged in.");
+        }
+      } catch (error) {
+        console.error("Error fetching recently viewed:", error);
+      }
+    };
+  
+    fetchRecentlyViewed();
+  }, [session]);  
+
   return (
     <div className="min-h-screen bg-white text-gray-900 w-full">
       <main className="w-full">
@@ -93,6 +129,32 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Recently Viewed Section */}
+        {status === "authenticated" && (
+          <section className="bg-gradient-to-br from-[#1a237e] to-[#0d47a1] w-full">
+            <div className="w-full px-4 sm:px-6 py-8 sm:py-12 md:py-16 text-center">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 md:mb-6 text-white">
+                Recently Viewed Products
+              </h1>
+              <p
+                className="text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 md:mb-8 max-w-3xl mx-auto text-white"
+                style={{ animationDelay: "0.1s" }}
+              >
+                Check out the products you’ve recently viewed!
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 w-full px-2 sm:px-4">
+                {recentlyViewed.length > 0 ? (
+                  recentlyViewed.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))
+                ) : (
+                  <p className="text-white">No recently viewed products found.</p>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="py-12 sm:py-16 md:py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -228,10 +290,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Chatbot
+        {/* Chatbot */}
         <section className="text-center w-full">
           <Chatbot />
-        </section> */}
+        </section>
       </main>
     </div>
   );

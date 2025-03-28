@@ -36,7 +36,18 @@ export default function WishlistPage() {
         throw new Error("Failed to fetch wishlist items");
       }
       const data = await response.json();
-      setWishlistItems(data);
+
+      // Remove duplicate products based on product._id
+      const uniqueItems = data.filter(
+        (item: WishlistItem, index: number, self: WishlistItem[]) =>
+          item.product &&
+          index ===
+            self.findIndex(
+              (t) => t.product && t.product._id === item.product?._id
+            )
+      );
+
+      setWishlistItems(uniqueItems);
     } catch (error: any) {
       console.error("Error fetching wishlist:", error);
       setError(error.message || "Failed to fetch wishlist items");
@@ -62,7 +73,7 @@ export default function WishlistPage() {
         <p>No items in wishlist.</p>
       ) : (
         wishlistItems.map((item) => (
-          <div key={item._id} className="border p-4 mb-4 rounded shadow">
+          <div key={item.product?._id} className="border p-4 mb-4 rounded shadow">
             {item.product ? (
               <>
                 <img
@@ -94,7 +105,7 @@ export default function WishlistPage() {
                   }
                   toast.success("Removed from wishlist!");
                   setWishlistItems((prev) =>
-                    prev.filter((w) => w._id !== item._id)
+                    prev.filter((w) => w.product?._id !== item.product?._id)
                   );
                 } catch (err) {
                   console.error(err);

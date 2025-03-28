@@ -4,30 +4,33 @@ import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
-// Interface สำหรับ Order และ OrderItem (อาจปรับแก้ตาม Model ที่แก้ไขแล้ว)
-interface OrderItem {
-  productId: string;
+interface PopulatedProduct {
+  _id: string;
   name: string;
   price: number;
-  quantity: number;
   image: string;
+}
+
+interface OrderItem {
+  productId: PopulatedProduct | null;
+  quantity: number;
+  priceAtOrder: number;
 }
 
 interface Order {
   _id: string;
-  // ไม่จำเป็นต้องมี userId เพราะเราจะใช้ session แทน
   items: OrderItem[];
   total: number;
-  createdAt: string;
+  orderedAt: string;
 }
 
 export default function OrderHistoryPage() {
   const { data: session, status } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (status === "loading") return; // รอให้ session โหลดเสร็จ
+    if (status === "loading") return;
     if (!session) {
       setError("Please log in to view your orders.");
       return;
@@ -37,28 +40,16 @@ export default function OrderHistoryPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch("/api/orders", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          // ไม่ต้องส่ง header user-id เพราะ API จะดึงจาก session
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch orders");
-      }
+      const response = await fetch("/api/orders");
+      if (!response.ok) throw new Error("Failed to fetch orders");
       const data = await response.json();
-      console.log("Fetched Orders:", data);
       setOrders(data);
-    } catch (error: any) {
-      console.error("Error fetching orders:", error);
-      setError(error.message || "Failed to fetch orders");
+    } catch (err: any) {
+      setError(err.message || "Error fetching orders.");
     }
   };
 
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
+  if (status === "loading") return <div>Loading...</div>;
   if (!session) {
     return (
       <div className="container mx-auto p-4">
@@ -78,25 +69,31 @@ export default function OrderHistoryPage() {
           <div key={order._id} className="border p-4 mb-4 rounded shadow">
             <h2 className="text-xl font-semibold">Order ID: {order._id}</h2>
             <p className="text-gray-600">
-              Date: {new Date(order.createdAt).toLocaleDateString()}
+              Date: {new Date(order.orderedAt).toLocaleDateString()}
             </p>
-            <p className="font-bold">Total: ${order.total}</p>
-            <div className="mt-4">
-              {order.items.map((item) => (
-                <div key={item.productId} className="flex items-center mb-2">
+            <p className="font-bold mb-2">Total: ${order.total}</p>
+
+            {order.items.map((item, index) =>
+              item.productId ? (
+                <div key={index} className="flex items-center mb-3">
                   <img
-                    src={item.image}
-                    alt={item.name}
+                    src={item.productId.image}
+                    alt={item.productId.name}
                     className="w-16 h-16 object-cover rounded mr-4"
                   />
                   <div>
-                    <h3>{item.name}</h3>
-                    <p>Price: ${item.price}</p>
+                    <h3 className="font-semibold">{item.productId.name}</h3>
+                    <p>Price: ${item.priceAtOrder}</p>
                     <p>Quantity: {item.quantity}</p>
+                    <p>Total: ${item.priceAtOrder * item.quantity}</p>
                   </div>
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div key={index} className="text-gray-500 italic">
+                  Product not available
+                </div>
+              )
+            )}
           </div>
         ))
       )}

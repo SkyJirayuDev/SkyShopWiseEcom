@@ -1,14 +1,13 @@
-// src/models/Wishlist.ts
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from 'mongoose';
 
-export interface IWishlist extends Document {
-  user: mongoose.Types.ObjectId; // เปลี่ยนจาก userId เป็น user
-  productId: mongoose.Types.ObjectId;
-}
-
-const WishlistSchema = new Schema<IWishlist>({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+const wishlistItemSchema = new mongoose.Schema({
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' }, // Product in wishlist
+  addedAt: { type: Date, default: Date.now }                           // When it was added
 });
 
-export default mongoose.models.Wishlist || mongoose.model<IWishlist>('Wishlist', WishlistSchema);
+const wishlistSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true }, // One wishlist per user
+  items: [wishlistItemSchema]                                                  // Array of products
+});
+
+export default mongoose.models.Wishlist || mongoose.model('Wishlist', wishlistSchema);

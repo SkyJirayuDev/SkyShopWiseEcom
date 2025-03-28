@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 
-// Interface สำหรับ Product และ CartItem
 interface Product {
   _id: string;
   name: string;
@@ -36,9 +35,7 @@ export default function CartPage() {
   const fetchCartItems = async () => {
     try {
       const response = await fetch("/api/cart", { method: "GET" });
-      if (!response.ok) {
-        throw new Error("Failed to fetch cart items");
-      }
+      if (!response.ok) throw new Error("Failed to fetch cart items");
       const data = await response.json();
       setCartItems(data);
     } catch (error: any) {
@@ -58,18 +55,49 @@ export default function CartPage() {
         toast.success("Item removed from cart!");
         fetchCartItems();
       } else {
-        console.error("Failed to remove item");
         toast.error("Failed to remove item");
       }
     } catch (error) {
-      console.error("Error removing item:", error);
       toast.error("Error removing item");
     }
   };
 
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
+  const handlePlaceOrder = async () => {
+    try {
+      const cartProducts = cartItems
+        .filter((item) => item.product) // 🛡️ Filter invalid items
+        .map((item) => ({
+          productId: item.product!._id,
+          quantity: item.quantity,
+          priceAtOrder: item.product!.price,
+        }));
+  
+      const total = cartProducts.reduce((acc, item) => {
+        return acc + item.priceAtOrder * item.quantity;
+      }, 0);
+  
+      if (cartProducts.length === 0 || total === 0) {
+        toast.error("Cart is empty or invalid.");
+        return;
+      }
+  
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cartItems: cartProducts, total }),
+      });
+  
+      if (!response.ok) throw new Error("Failed to place order");
+  
+      toast.success("Order placed successfully!");
+      setCartItems([]); // ✅ Clear UI
+    } catch (error) {
+      console.error("Error placing order:", error);
+      toast.error("Failed to place order");
+    }
+  };  
+
+  if (status === "loading") return <div>Loading...</div>;
   if (!session) {
     return (
       <div className="container mx-auto p-4">
@@ -87,10 +115,7 @@ export default function CartPage() {
       ) : (
         cartItems.map((item) =>
           item.product ? (
-            <div
-              key={item._id}
-              className="border p-4 mb-4 rounded shadow flex items-center justify-between"
-            >
+            <div key={item._id} className="border p-4 mb-4 rounded shadow flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <img
                   src={item.product.image}
@@ -112,10 +137,7 @@ export default function CartPage() {
               </button>
             </div>
           ) : (
-            <div
-              key={item._id}
-              className="border p-4 mb-4 rounded shadow bg-gray-100 text-gray-500 flex justify-between items-center"
-            >
+            <div key={item._id} className="border p-4 mb-4 rounded shadow bg-gray-100 text-gray-500 flex justify-between items-center">
               <p>Product not available</p>
               <button
                 onClick={() => handleRemove(item._id)}
@@ -126,6 +148,17 @@ export default function CartPage() {
             </div>
           )
         )
+      )}
+
+      {cartItems.length > 0 && (
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={handlePlaceOrder}
+            className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700"
+          >
+            Place Order
+          </button>
+        </div>
       )}
     </div>
   );
