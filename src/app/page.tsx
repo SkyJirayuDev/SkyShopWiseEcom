@@ -1,8 +1,9 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import { useSession } from "next-auth/react"; // ใช้ useSession สำหรับการเช็คการล็อกอิน
+import { useSession } from "next-auth/react";
 import ProductCard from "../components/ProductCard";
 import Chatbot from "../components/Chatbot";
 
@@ -17,11 +18,34 @@ interface Product {
 }
 
 export default function HomePage() {
-  const { data: session, status } = useSession(); // ดึงข้อมูล session และ status
+  const { data: session, status } = useSession();
   const [products, setProducts] = useState<Product[]>([]);
   const [productsFeature, setProductsFeature] = useState<Product[]>([]);
-  const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]); // เพิ่ม state สำหรับ Recently Viewed
+  const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
+  const [personalMessage, setPersonalMessage] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+
+  const fetchPersonalMessage = async (forceRefresh = false) => {
+    try {
+      if (session?.user?.id) {
+        const url = forceRefresh
+          ? `/api/personal-message?userId=${session.user.id}&refresh=true`
+          : `/api/personal-message?userId=${session.user.id}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.message) setPersonalMessage(data.message);
+        if (data.couponCode) setCouponCode(data.couponCode);
+        if (forceRefresh) toast.success("Your deal has been refreshed!");
+      }
+    } catch (error) {
+      console.error("Error fetching personal message:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPersonalMessage();
+  }, [session]);
 
   useEffect(() => {
     const fetchRecommended = async () => {
@@ -70,27 +94,23 @@ export default function HomePage() {
   useEffect(() => {
     const fetchRecentlyViewed = async () => {
       try {
-        console.log("Session:", session); // ตรวจสอบว่า session มีข้อมูลหรือไม่
         if (session?.user?.id) {
           const userId = session.user.id;
           const response = await fetch(`/api/recentlyViewed?userId=${userId}`, {
             method: "GET",
-            credentials: "include", // เพิ่มการส่ง cookies หรือ tokens ที่จำเป็น
+            credentials: "include",
           });
 
           if (response.ok) {
             const data = await response.json();
-            console.log("Recently viewed data:", data); // ตรวจสอบข้อมูลที่ได้รับจาก API
             if (Array.isArray(data) && data.length > 0) {
               setRecentlyViewed(data);
             } else {
-              setRecentlyViewed([]); // หากไม่มี recently viewed items
+              setRecentlyViewed([]);
             }
           } else {
             console.error("Failed to fetch recently viewed items.");
           }
-        } else {
-          console.log("User is not logged in.");
         }
       } catch (error) {
         console.error("Error fetching recently viewed:", error);
@@ -103,33 +123,59 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-white text-gray-900 w-full">
       <main className="w-full">
-        {/* Hero Section - Personalized Recommendations */}
-        <section className="bg-gradient-to-br from-[#1a237e] to-[#0d47a1] w-full">
-          <div className="w-full px-4 sm:px-6 py-8 sm:py-12 md:py-16 text-center">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 md:mb-6 text-white">
-              Recommended for You
-            </h1>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 md:mb-8 max-w-3xl mx-auto text-white">
-              Based on your recent activity and preferences
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 w-full px-2 sm:px-4">
-              {recommendedProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
-            <div className="text-center mt-4 sm:mt-6 md:mt-8">
+        {/* Personalized AI Marketing Message Section */}
+        {personalMessage && (
+          <section className="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-700 text-white py-8 px-6 sm:px-8 md:px-16 rounded-b-3xl shadow-xl">
+            <div className="max-w-5xl mx-auto text-center">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 flex items-center justify-center gap-2">
+                🎁 <span>Personalized Deal Just for You</span>
+              </h2>
+
+              {/* Main message from AI - split into lines */}
+              <div className="text-lg sm:text-xl font-medium leading-relaxed space-y-1">
+                {personalMessage.split(". ").map((line, index) => (
+                  <p key={index}>
+                    {line.trim()}
+                    {line.trim().endsWith(".") ? "" : "."}
+                  </p>
+                ))}
+              </div>
+
+              {/* Coupon Code Display */}
+              {couponCode && (
+                <div className="mt-4 text-lg font-semibold">
+                  🎫 Use code{" "}
+                  <span className="bg-white text-blue-700 px-3 py-1 rounded-full font-bold shadow-sm tracking-wide">
+                    {couponCode}
+                  </span>{" "}
+                  at checkout
+                </div>
+              )}
+
+              {/* Refresh Button */}
+              <button
+                onClick={() => fetchPersonalMessage(true)}
+                className="mt-6 bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-2 rounded-full text-base transition duration-300 shadow-md"
+              >
+                🔄 Refresh Deal
+              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 w-full px-2 sm:px-4 mt-6">
+                {recommendedProducts.map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
+              </div>
               <Link
                 href="/products"
-                className="bg-green-500 text-white px-3 sm:px-4 md:px-6 py-1 sm:py-1.5 md:py-2 rounded text-xs sm:text-sm md:text-base hover:bg-green-600 transition-colors duration-300"
+                className="inline-block mt-4 bg-white text-blue-700 font-semibold px-6 py-2 rounded-full text-sm sm:text-base hover:bg-gray-100 transition-all duration-300"
               >
-                View All Products
+                Shop Now
               </Link>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Recently Viewed Section */}
-        {status === "authenticated" && (
+        {/* {status === "authenticated" && (
           <section className="bg-gradient-to-br from-[#1a237e] to-[#0d47a1] w-full">
             <div className="w-full px-4 sm:px-6 py-8 sm:py-12 md:py-16 text-center">
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 md:mb-6 text-white">
@@ -154,7 +200,7 @@ export default function HomePage() {
               </div>
             </div>
           </section>
-        )}
+        )} */}
 
         <section className="py-12 sm:py-16 md:py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
