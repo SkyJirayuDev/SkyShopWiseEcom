@@ -21,26 +21,28 @@ export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [productsFeature, setProductsFeature] = useState<Product[]>([]);
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]); // เพิ่ม state สำหรับ Recently Viewed
+  const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchRecommended = async () => {
       try {
-        const response = await fetch("/api/products");
+        const response = await fetch("/api/recommendations");
         const data = await response.json();
 
         if (Array.isArray(data)) {
-          setProducts(data.slice(0, 8));
-        } else if (data.products && Array.isArray(data.products)) {
-          setProducts(data.products.slice(0, 6));
+          setRecommendedProducts(data.slice(0, 8));
         } else {
-          console.error("Invalid products data:", data);
+          console.error("Invalid recommendations data:", data);
         }
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching recommendations:", error);
       }
     };
-    fetchProducts();
-  }, []);
+
+    if (session?.user?.id) {
+      fetchRecommended();
+    }
+  }, [session]);
 
   useEffect(() => {
     const fetchProductsFeature = async () => {
@@ -68,17 +70,17 @@ export default function HomePage() {
   useEffect(() => {
     const fetchRecentlyViewed = async () => {
       try {
-        console.log('Session:', session); // ตรวจสอบว่า session มีข้อมูลหรือไม่
+        console.log("Session:", session); // ตรวจสอบว่า session มีข้อมูลหรือไม่
         if (session?.user?.id) {
           const userId = session.user.id;
           const response = await fetch(`/api/recentlyViewed?userId=${userId}`, {
-            method: 'GET',
-            credentials: 'include', // เพิ่มการส่ง cookies หรือ tokens ที่จำเป็น
+            method: "GET",
+            credentials: "include", // เพิ่มการส่ง cookies หรือ tokens ที่จำเป็น
           });
-          
+
           if (response.ok) {
             const data = await response.json();
-            console.log('Recently viewed data:', data); // ตรวจสอบข้อมูลที่ได้รับจาก API
+            console.log("Recently viewed data:", data); // ตรวจสอบข้อมูลที่ได้รับจาก API
             if (Array.isArray(data) && data.length > 0) {
               setRecentlyViewed(data);
             } else {
@@ -94,28 +96,24 @@ export default function HomePage() {
         console.error("Error fetching recently viewed:", error);
       }
     };
-  
+
     fetchRecentlyViewed();
-  }, [session]);  
+  }, [session]);
 
   return (
     <div className="min-h-screen bg-white text-gray-900 w-full">
       <main className="w-full">
-        {/* Hero Section */}
+        {/* Hero Section - Personalized Recommendations */}
         <section className="bg-gradient-to-br from-[#1a237e] to-[#0d47a1] w-full">
           <div className="w-full px-4 sm:px-6 py-8 sm:py-12 md:py-16 text-center">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 md:mb-6 text-white">
-              IT Equipment & Solutions
+              Recommended for You
             </h1>
-            <p
-              className="text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 md:mb-8 max-w-3xl mx-auto text-white"
-              style={{ animationDelay: "0.1s" }}
-            >
-              Your one-stop online shop for all IT hardware, software, and
-              enterprise solutions.
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 md:mb-8 max-w-3xl mx-auto text-white">
+              Based on your recent activity and preferences
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 w-full px-2 sm:px-4">
-              {products.map((product) => (
+              {recommendedProducts.map((product) => (
                 <ProductCard key={product._id} product={product} />
               ))}
             </div>
@@ -149,7 +147,9 @@ export default function HomePage() {
                     <ProductCard key={product._id} product={product} />
                   ))
                 ) : (
-                  <p className="text-white">No recently viewed products found.</p>
+                  <p className="text-white">
+                    No recently viewed products found.
+                  </p>
                 )}
               </div>
             </div>

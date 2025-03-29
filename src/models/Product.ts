@@ -7,6 +7,10 @@ const productSchema = new mongoose.Schema({
   image: String,
   category: String,
   stock: Number,
+  embedding: {
+    type: [Number], 
+    default: undefined,
+  },
 });
 
 const Product =
