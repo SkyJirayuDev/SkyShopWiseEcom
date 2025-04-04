@@ -4,11 +4,11 @@ import RecentlyViewed from '@/models/RecentlyViewed';
 import Product from '@/models/Product';
 import { NextRequest, NextResponse } from 'next/server';
 
-// ✅ GET recently viewed items
+// GET method to fetch recently viewed products
 export async function GET(req: NextRequest) {
   await connectToDatabase();
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET! });
-  if (!token?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!token?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }); 
 
   try {
     const rv = await RecentlyViewed.findOne({ userId: token.id }).populate('items.productId');
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ✅ POST add to recently viewed (prevents duplication)
+// POST method to add a product to recently viewed
 export async function POST(req: NextRequest) {
   await connectToDatabase();
   const { userId, productId } = await req.json();
@@ -35,14 +35,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // ✅ Remove duplicate first
     await RecentlyViewed.findOneAndUpdate(
       { userId },
       { $pull: { items: { productId } } },
       { new: true }
     );
 
-    // ✅ Push item to front, limit to 10
     await RecentlyViewed.findOneAndUpdate(
       { userId },
       {

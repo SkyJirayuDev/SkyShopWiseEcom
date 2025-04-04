@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import ProductCard from "../components/ProductCard";
 import Chatbot from "../components/Chatbot";
 
+// Interface for Product
 interface Product {
   _id: string;
   name: string;
@@ -18,14 +19,15 @@ interface Product {
 }
 
 export default function HomePage() {
-  const { data: session, status } = useSession();
-  const [products, setProducts] = useState<Product[]>([]);
+  const { data: session, status } = useSession(); 
+  const [products, setProducts] = useState<Product[]>([]); 
   const [productsFeature, setProductsFeature] = useState<Product[]>([]);
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [personalMessage, setPersonalMessage] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState<string | null>(null);
 
+  // Fetch products from the API
   const fetchPersonalMessage = async (forceRefresh = false) => {
     try {
       if (session?.user?.id) {
@@ -47,6 +49,7 @@ export default function HomePage() {
     fetchPersonalMessage();
   }, [session]);
 
+  // Fetch recommended products
   useEffect(() => {
     const fetchRecommended = async () => {
       try {
@@ -68,6 +71,7 @@ export default function HomePage() {
     }
   }, [session]);
 
+  // Fetch featured products
   useEffect(() => {
     const fetchProductsFeature = async () => {
       try {
@@ -91,6 +95,7 @@ export default function HomePage() {
     fetchProductsFeature();
   }, []);
 
+  // Fetch recently viewed products
   useEffect(() => {
     const fetchRecentlyViewed = async () => {
       try {
@@ -153,12 +158,13 @@ export default function HomePage() {
               )}
 
               {/* Refresh Button */}
-              <button
+              {/* <button
                 onClick={() => fetchPersonalMessage(true)}
                 className="mt-6 bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-2 rounded-full text-base transition duration-300 shadow-md"
               >
                 🔄 Refresh Deal
-              </button>
+              </button> */}
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 w-full px-2 sm:px-4 mt-6">
                 {recommendedProducts.map((product) => (
                   <ProductCard key={product._id} product={product} />

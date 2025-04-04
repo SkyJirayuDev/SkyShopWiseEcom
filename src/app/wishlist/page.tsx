@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 
+// This page is for displaying the user's wishlist
 interface WishlistItem {
   _id: string;
   product?: {
@@ -20,6 +21,7 @@ export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [error, setError] = useState<string>("");
 
+  // Fetch wishlist items when the component mounts or when the session changes
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
@@ -29,6 +31,7 @@ export default function WishlistPage() {
     fetchWishlist();
   }, [session, status]);
 
+  // Function to fetch wishlist items from the server
   const fetchWishlist = async () => {
     try {
       const response = await fetch("/api/wishlist", { method: "GET" });
@@ -74,6 +77,8 @@ export default function WishlistPage() {
       ) : (
         wishlistItems.map((item) => (
           <div key={item.product?._id} className="border p-4 mb-4 rounded shadow">
+
+            {/* Display product details */}
             {item.product ? (
               <>
                 <img
@@ -89,6 +94,8 @@ export default function WishlistPage() {
                 <p className="text-gray-500">Product not available</p>
               </div>
             )}
+
+            {/* Remove from wishlist button */}
             <button
               onClick={async () => {
                 try {

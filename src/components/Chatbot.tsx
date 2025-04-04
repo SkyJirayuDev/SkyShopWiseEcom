@@ -2,13 +2,16 @@
 
 import React, { useState } from "react";
 
+// Chatbot component
 export default function Chatbot() {
   const [isMinimized, setIsMinimized] = useState(true);
   const [userInput, setUserInput] = useState("");
   const [messages, setMessages] = useState<
+
     { text: string; sender: "user" | "bot" }[]
   >([]);
 
+  // Function to handle sending messages
   const handleSend = async () => {
     if (!userInput.trim()) return;
 
@@ -39,8 +42,8 @@ export default function Chatbot() {
         isMinimized ? "w-16 h-16" : "w-80 h-[400px]"
       }`}
     >
+      {/* Minimized State */}
       {isMinimized ? (
-        // โหมด minimized: ปุ่มกลมเล็ก
         <div
           className="w-full h-full flex items-center justify-center bg-blue-600 rounded-full shadow-lg cursor-pointer"
           onClick={() => setIsMinimized(false)}
@@ -48,8 +51,8 @@ export default function Chatbot() {
           <span className="text-white text-2xl">💬</span>
         </div>
       ) : (
-        // โหมด expanded: หน้าต่าง Chatbot เต็มรูปแบบ
         <div className="bg-white border rounded shadow-md flex flex-col h-full">
+
           {/* Header */}
           <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-400 text-white p-2 rounded-t">
             <h1 className="text-lg font-bold">ShopWise Chatbot 🤖</h1>
@@ -60,7 +63,8 @@ export default function Chatbot() {
               ×
             </button>
           </div>
-          {/* Messages Container (เพิ่ม flex-1 ให้ container นี้) */}
+
+          {/* Messages */}
           <div className="flex flex-col flex-1 p-2 overflow-y-auto bg-gray-50 space-y-2">
             {messages.map((msg, index) => (
               <div
@@ -82,7 +86,8 @@ export default function Chatbot() {
               </div>
             ))}
           </div>
-          {/* Input & Send Button */}
+          
+          {/* Input */}
           <div className="p-2 border-t">
             <input
               type="text"

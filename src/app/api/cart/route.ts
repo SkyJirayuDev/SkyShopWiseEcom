@@ -5,7 +5,6 @@ import Product from "@/models/Product";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 
-// Type definition for a single item in the cart
 interface CartItem {
   _id?: string;
   productId: string;
@@ -13,29 +12,30 @@ interface CartItem {
   addedAt?: Date;
 }
 
-// GET /api/cart - Fetch cart items for the logged-in user
+// GET method to fetch cart items
 export async function GET() {
+  // Connect to the database
   await connectToDatabase();
 
   try {
+    // Check if the user is authenticated
     const session = await getServerSession(authOptions);
-
     if (!session || !session.user?.id) {
-      return NextResponse.json([]); // Return empty array if not logged in
+      return NextResponse.json([]); 
     }
-
+    // Find the cart for the current user
     const cart = await Cart.findOne({ userId: session.user.id }).populate("items.productId");
-
     if (!cart) {
       return NextResponse.json([]);
     }
 
+    // Check if cart items exist
     const formattedItems = cart.items
-      .filter((item: any) => item.productId) // Remove null references
+      .filter((item: any) => item.productId) 
       .map((item: any) => ({
         _id: item._id,
         quantity: item.quantity,
-        product: item.productId, // populated product
+        product: item.productId, 
       }));
 
     return NextResponse.json(formattedItems);
@@ -48,10 +48,9 @@ export async function GET() {
   }
 }
 
-// POST /api/cart - Add or update a product in the user's cart
+// POST method to add an item to the cart
 export async function POST(req: Request) {
   await connectToDatabase();
-
   try {
     const session = await getServerSession(authOptions);
     if (!session || !session.user?.id) {
@@ -102,7 +101,7 @@ export async function POST(req: Request) {
   }
 }
 
-// DELETE /api/cart - Remove a product from the user's cart
+// DELETE method to remove an item from the cart
 export async function DELETE(req: Request) {
   await connectToDatabase();
 

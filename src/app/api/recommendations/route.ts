@@ -4,10 +4,7 @@ import { authOptions } from '../auth/[...nextauth]/route';
 import { getRecommendedProducts } from '@/lib/recommend';
 import connectToDatabase from '@/lib/mongodb';
 
-/**
- * GET /api/recommendations
- * Returns personalized product recommendations for the current user
- */
+// Define the PersonalMessage schema
 export async function GET(req: Request) {
   await connectToDatabase();
 

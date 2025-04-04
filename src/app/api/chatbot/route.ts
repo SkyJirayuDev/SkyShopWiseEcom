@@ -1,35 +1,27 @@
-// src/app/appi/chatbot/route.ts
-
 import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import Product from "@/models/Product";
 import OpenAI from "openai";
 
-// เชื่อมต่อ OpenAI โดยใช้ API key จาก environment variable
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY, 
 });
 
+// Connect to the database
 export async function POST(req: Request) {
   await connectToDatabase();
-
   try {
-    // รับคำถามจากลูกค้า
-    const { userInput } = await req.json();
+    const { userInput } = await req.json(); // Extract user input from the request body
+    const products = await Product.find({}).lean(); // Fetch all products from the database
+    let productContext: string = ""; // Initialize an empty string for product context
 
-    // 1. ดึงข้อมูลสินค้าทั้งหมดจากฐานข้อมูล
-    const products = await Product.find({}).lean();
-
-    // 2. สร้างข้อความ context สำหรับสินค้าทั้งหมด
-    let productContext: string = "";
+    // Iterate over each product and format its details
     products.forEach((product: any): void => {
       productContext += `ID: ${product._id}\nName: ${product.name}\nDescription: ${product.description}\nCategory: ${product.category}\nPrice: $${product.price}\n\n`;
     });
+    const baseUrl: string = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"; 
 
-    // 3. กำหนด Base URL สำหรับลิงก์สินค้า
-    const baseUrl: string = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
-    // 4. สร้าง prompt สำหรับ OpenAI ด้วยคำสั่งที่ชัดเจน
+    // Construct the system message for the AI model
     const systemMessage: string = `You are a friendly and knowledgeable shopping assistant.
 Your task is to answer the customer's query using only the product information provided below.
 Each product is described with its ID, Name, Description, Category, and Price.
@@ -57,20 +49,20 @@ Instructions:
 
 Please provide your answer accordingly.`;
 
-    // 5. สร้าง messages สำหรับส่งให้ OpenAI
+    // Log the system message for debugging
     const messages = [
       { role: "system", content: systemMessage },
       { role: "user", content: userInput },
     ];
 
-    // 6. ขอคำตอบจาก OpenAI
+    // Call the OpenAI API to get the AI's response
     const chatResponse = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: messages as unknown as any,
     });
 
+    // Log the AI's response for debugging
     const aiMessage: string = chatResponse.choices[0]?.message.content || "";
-
     return NextResponse.json({ aiMessage });
   } catch (error) {
     console.error("Error in chatbot API:", error);

@@ -18,16 +18,17 @@ interface Product {
 
 interface ProductCardProps {
   product: Product;
-  // คุณสามารถเพิ่ม props อื่น ๆ เช่น flag สำหรับแสดง/ซ่อนปุ่มเพิ่มเติมได้
   showButtons?: boolean;
 }
 
+// Define the ProductCard component
 export default function ProductCard({
   product,
   showButtons = true,
 }: ProductCardProps) {
   const { data: session } = useSession();
 
+  // Function to handle adding the product to the cart
   const handleAddToCart = async () => {
     if (!session) {
       toast.error("An error occurred while adding the item to your cart. Please log in to continue.");
@@ -54,6 +55,7 @@ export default function ProductCard({
     }
   };
 
+  // Function to handle adding the product to the wishlist
   const handleAddToWishlist = async () => {
     if (!session) {
       toast.error("Failed to add to wishlist. Please log in to continue.");
@@ -81,7 +83,7 @@ export default function ProductCard({
 
   return (
     <div className="border rounded-lg p-2 sm:p-4 shadow-md bg-white flex flex-col h-full transition-all duration-300 hover:shadow-xl">
-      {/* ส่วนแสดงภาพสินค้า - ทำให้รูปภาพคลิกได้ */}
+      {/* Product image with hover effect and link to product page */}
       <Link href={`/product/${product._id}`}>
         <div className="w-full aspect-video bg-gray-100 flex items-center justify-center overflow-hidden rounded relative cursor-pointer">
           <img 
@@ -90,11 +92,11 @@ export default function ProductCard({
             className="w-full h-full object-contain transition-transform duration-500 hover:scale-105" 
           />
           
-          {/* Wishlist button repositioned to top right with star icon */}
+          {/* Wishlist button */}
           {showButtons && (
             <button
               onClick={(e) => {
-                e.preventDefault(); // ป้องกันการเปิดลิงก์เมื่อคลิกปุ่ม wishlist
+                e.preventDefault(); 
                 handleAddToWishlist();
               }}
               className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-white bg-opacity-75 hover:bg-opacity-100 p-1 sm:p-2 rounded-full shadow-md transition-all duration-300 hover:transform hover:scale-110 text-base sm:text-lg"
@@ -109,16 +111,15 @@ export default function ProductCard({
           )}
         </div>
       </Link>
-  
-      {/* ส่วนเนื้อหาสินค้า - ทำให้ชื่อสินค้าคลิกได้ */}
+      
+      {/* Product name and description */}
       <div className="mt-2 sm:mt-4 flex-1">
         <Link href={`/product/${product._id}`}>
           <h2 className="text-gray-800 text-sm sm:text-base md:text-lg lg:text-xl font-semibold transition-colors duration-300 hover:text-blue-600 line-clamp-1 cursor-pointer">
             {product.name}
           </h2>
         </Link>
-        
-        {/* ใช้ line-clamp-2 เพื่อตัดรายละเอียดสินค้าหากยาวเกิน 2 บรรทัด */}
+
         <p className="text-gray-600 text-xs sm:text-sm overflow-hidden text-ellipsis line-clamp-2 mt-1 sm:mt-2">
           {product.description}
         </p>
@@ -126,8 +127,8 @@ export default function ProductCard({
           ${product.price}
         </p>
       </div>
-  
-      {/* ส่วนปุ่มด้านล่าง - มีเฉพาะปุ่ม Add to Cart */}
+      
+      {/* Add to cart button */}
       {showButtons && (
         <div className="mt-2 sm:mt-4">
           <button

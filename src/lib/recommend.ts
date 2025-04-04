@@ -5,9 +5,7 @@ import Cart from "@/models/Cart";
 import RecentlyViewed from "@/models/RecentlyViewed";
 import Product from "@/models/Product";
 
-/**
- * Helper: Calculate average vector
- */
+// Helper: Calculate average vector
 function averageVector(vectors: number[][]): number[] {
   const length = vectors[0]?.length || 0;
   const avg = Array(length).fill(0);
@@ -19,9 +17,7 @@ function averageVector(vectors: number[][]): number[] {
   return avg.map((v) => v / vectors.length);
 }
 
-/**
- * Helper: Get embeddings from products by IDs
- */
+// Helper: Fetch product embeddings
 async function getProductEmbeddings(productIds: mongoose.Types.ObjectId[]): Promise<number[][]> {
   console.log("🔍 Fetching embeddings for product IDs:", productIds); // debug
   const products = await Product.find({
@@ -32,9 +28,7 @@ async function getProductEmbeddings(productIds: mongoose.Types.ObjectId[]): Prom
   return products.map((p) => p.embedding);
 }
 
-/**
- * Generate a weighted user profile vector based on behaviors
- */
+// Main function: Generate user profile vector
 export async function generateUserProfileVector(userId: string): Promise<number[] | null> {
   const weightConfig = {
     order: 0.4,
@@ -45,7 +39,7 @@ export async function generateUserProfileVector(userId: string): Promise<number[
 
   let allVectors: number[][] = [];
 
-  // 🔸 ORDER
+  // ORDERS
   const orders = await Order.find({ userId });
   const orderProductIds = orders.flatMap((order: any) =>
     order.items.map((item: any) => item.productId)
@@ -56,7 +50,7 @@ export async function generateUserProfileVector(userId: string): Promise<number[
   const weightedOrder = orderVectors.map((v) => v.map((val) => val * weightConfig.order));
   allVectors.push(...weightedOrder);
 
-  // 🔸 WISHLIST
+  // WISHLIST
   const wishlist = await Wishlist.findOne({ userId });
   const wishlistProductIds = wishlist ? wishlist.items.map((item: any) => item.productId) : [];
   console.log("🧠 Wishlist product IDs:", wishlistProductIds); // debug
@@ -67,7 +61,7 @@ export async function generateUserProfileVector(userId: string): Promise<number[
   );
   allVectors.push(...weightedWishlist);
 
-  // 🔸 CART
+  // CART
   const cart = await Cart.findOne({ userId });
   const cartProductIds = cart ? cart.items.map((item: any) => item.productId) : [];
   console.log("🧠 Cart product IDs:", cartProductIds); // debug
@@ -76,7 +70,7 @@ export async function generateUserProfileVector(userId: string): Promise<number[
   const weightedCart = cartVectors.map((v) => v.map((val) => val * weightConfig.cart));
   allVectors.push(...weightedCart);
 
-  // 🔸 RECENTLY VIEWED
+  // RECENTLY VIEWED
   const recently = await RecentlyViewed.findOne({ userId });
   const recentProductIds = recently ? recently.items.map((item: any) => item.productId) : [];
   console.log("🧠 Recently Viewed product IDs:", recentProductIds); // debug
@@ -98,9 +92,7 @@ export async function generateUserProfileVector(userId: string): Promise<number[
   return userVector;
 }
 
-/**
- * Recommend products based on cosine similarity with user vector
- */
+// Main function: Get recommended products
 export async function getRecommendedProducts(userId: string, topN: number = 10) {
   const userVector = await generateUserProfileVector(userId);
   if (!userVector) return [];

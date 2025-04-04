@@ -8,13 +8,13 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { data: session, status } = useSession();
 
-  // ดึงจำนวนสินค้าจาก Cart
+  // Fetch cart count from the server
   useEffect(() => {
     const fetchCartCount = async () => {
       try {
         const response = await fetch("/api/cart");
         const data = await response.json();
-        setCartCount(data.length); // นับจำนวนสินค้าในตะกร้า
+        setCartCount(data.length); 
       } catch (error) {
         console.error("Failed to fetch cart count:", error);
       }
@@ -67,7 +67,8 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
-            {/* ตรวจสอบ session */}
+
+            {/* User Authentication */}
             {status === "loading" ? null : session ? (
               <>
                 <span className="ml-4">Hi, {session.user?.name || session.user?.email}</span>
@@ -115,7 +116,8 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
-            {/* ตรวจสอบ session สำหรับ Mobile */}
+
+            {/* User Authentication */}
             {status === "loading" ? null : session ? (
               <>
                 <span className="py-2">Hi, {session.user?.name || session.user?.email}</span>

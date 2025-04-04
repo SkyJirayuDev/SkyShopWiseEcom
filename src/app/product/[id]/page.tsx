@@ -16,11 +16,10 @@ interface Product {
 const ProductDetailPage = () => {
   const params = useParams();
   const id = params?.id as string;
-
-  const { data: session } = useSession(); // 🔐 ตรวจสอบ session
+  const { data: session } = useSession(); 
   const [product, setProduct] = useState<Product | null>(null);
 
-  // ✅ ดึงข้อมูลสินค้า
+  // Fetch product details from the API
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -28,7 +27,7 @@ const ProductDetailPage = () => {
         const data = await response.json();
         setProduct(data);
 
-        // ✅ บันทึก Recently Viewed ถ้าล็อกอินแล้ว
+        // Log the fetched product data
         if (session?.user?.id && data?._id) {
           await fetch("/api/recentlyViewed", {
             method: "POST",
@@ -49,7 +48,7 @@ const ProductDetailPage = () => {
     }
   }, [id, session]);
 
-  // 🛒 เพิ่มสินค้าลงตะกร้า
+  // Handle adding product to cart and wishlist
   const handleAddToCart = async () => {
     try {
       const response = await fetch("/api/cart", {
@@ -71,7 +70,7 @@ const ProductDetailPage = () => {
     }
   };
 
-  // ❤️ เพิ่มลง wishlist
+  // Handle adding product to wishlist
   const handleAddToWishlist = async () => {
     try {
       const response = await fetch("/api/wishlist", {

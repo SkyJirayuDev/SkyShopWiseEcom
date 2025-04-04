@@ -23,6 +23,7 @@ export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [error, setError] = useState<string>("");
 
+  // Fetch cart items when the session is available
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
@@ -32,6 +33,7 @@ export default function CartPage() {
     fetchCartItems();
   }, [session, status]);
 
+  // Fetch cart items from the server
   const fetchCartItems = async () => {
     try {
       const response = await fetch("/api/cart", { method: "GET" });
@@ -44,6 +46,7 @@ export default function CartPage() {
     }
   };
 
+  // Handle removing an item from the cart
   const handleRemove = async (cartItemId: string) => {
     try {
       const response = await fetch("/api/cart", {
@@ -62,25 +65,29 @@ export default function CartPage() {
     }
   };
 
+  // Handle placing an order
   const handlePlaceOrder = async () => {
     try {
       const cartProducts = cartItems
-        .filter((item) => item.product) // 🛡️ Filter invalid items
+        .filter((item) => item.product) //Filter invalid items
         .map((item) => ({
           productId: item.product!._id,
           quantity: item.quantity,
           priceAtOrder: item.product!.price,
         }));
   
+      // Calculate total price
       const total = cartProducts.reduce((acc, item) => {
         return acc + item.priceAtOrder * item.quantity;
       }, 0);
   
+      // Validate cart items and total
       if (cartProducts.length === 0 || total === 0) {
         toast.error("Cart is empty or invalid.");
         return;
       }
   
+      // Send order details to the server
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -90,13 +97,14 @@ export default function CartPage() {
       if (!response.ok) throw new Error("Failed to place order");
   
       toast.success("Order placed successfully!");
-      setCartItems([]); // ✅ Clear UI
+      setCartItems([]);
     } catch (error) {
       console.error("Error placing order:", error);
       toast.error("Failed to place order");
     }
   };  
 
+  // Render the cart page
   if (status === "loading") return <div>Loading...</div>;
   if (!session) {
     return (
@@ -150,6 +158,7 @@ export default function CartPage() {
         )
       )}
 
+      {/* Display total price */}
       {cartItems.length > 0 && (
         <div className="flex justify-end mt-6">
           <button

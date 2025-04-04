@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
 
-  // ตรวจสอบว่า session และ session.user มีค่า และ role ต้องเป็น admin
+  // Check if the user is authenticated and has the admin role
   if (!session || !session.user || session.user.role !== "admin") {
     redirect("/login");
   }

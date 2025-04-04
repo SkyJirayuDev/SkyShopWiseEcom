@@ -3,7 +3,7 @@ dotenv.config({ path: ".env.local" });
 
 import mongoose from "mongoose";
 import { OpenAI } from "openai";
-import Product from "@/models/Product"; // Product model
+import Product from "@/models/Product"; 
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -16,7 +16,6 @@ async function connectToDatabase() {
   }
 }
 
-// Generate embedding for a single product using OpenAI
 async function generateEmbeddingForProduct(product: any) {
   const input = `${product.name}. ${product.description}`;
 
@@ -42,7 +41,6 @@ async function generateEmbeddingForProduct(product: any) {
 async function generateAllEmbeddings() {
   await connectToDatabase();
 
-  // Load all products (even those that may already have embeddings)
   const products = await Product.find({});
   console.log(`🔎 Found ${products.length} products to embed`);
 

@@ -4,7 +4,7 @@ import Wishlist from '@/models/Wishlist';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]/route';
 
-// ✅ GET wishlist items
+// GET method to fetch wishlist items
 export async function GET() {
   await connectToDatabase();
   const session = await getServerSession(authOptions);
@@ -14,8 +14,9 @@ export async function GET() {
 
   try {
     const wishlist = await Wishlist.findOne({ userId: session.user.id }).populate('items.productId');
-    if (!wishlist) return NextResponse.json([]);
+    if (!wishlist) return NextResponse.json([]); // No wishlist found
 
+    // Check if wishlist items exist
     const response = wishlist.items.map((item: any) => ({
       ...item._doc,
       product: item.productId,
@@ -28,7 +29,7 @@ export async function GET() {
   }
 }
 
-// ✅ POST add to wishlist
+// POST method to add a product to the wishlist
 export async function POST(req: Request) {
   await connectToDatabase();
   const session = await getServerSession(authOptions);
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
   }
 }
 
-// ✅ DELETE from wishlist
+// DELETE method to remove a product from the wishlist
 export async function DELETE(req: Request) {
   await connectToDatabase();
   const session = await getServerSession(authOptions);

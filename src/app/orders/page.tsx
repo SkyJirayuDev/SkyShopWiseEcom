@@ -29,6 +29,7 @@ export default function OrderHistoryPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState("");
 
+  // Fetch orders when the component mounts or session changes
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
@@ -38,6 +39,7 @@ export default function OrderHistoryPage() {
     fetchOrders();
   }, [session, status]);
 
+  // Fetch orders from the API
   const fetchOrders = async () => {
     try {
       const response = await fetch("/api/orders");
@@ -49,6 +51,7 @@ export default function OrderHistoryPage() {
     }
   };
 
+  // Handle order cancellation
   if (status === "loading") return <div>Loading...</div>;
   if (!session) {
     return (
@@ -73,6 +76,7 @@ export default function OrderHistoryPage() {
             </p>
             <p className="font-bold mb-2">Total: ${order.total}</p>
 
+            {/* Map through order items and display them */}
             {order.items.map((item, index) =>
               item.productId ? (
                 <div key={index} className="flex items-center mb-3">

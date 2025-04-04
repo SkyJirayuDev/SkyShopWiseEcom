@@ -1,15 +1,16 @@
-// ✅ /models/Order.ts
 import mongoose from 'mongoose';
 
+// Define the schema for items in the order
 const orderProductSchema = new mongoose.Schema({
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' }, // Reference to Product model
   quantity: Number,
   priceAtOrder: Number
 });
 
+// Define the schema for the order
 const orderSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  items: [orderProductSchema], // ✅ Changed from products to items
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Reference to User model
+  items: [orderProductSchema], // Array of products in the order
   total: Number,
   status: { type: String, default: 'pending' },
   orderedAt: { type: Date, default: Date.now },

@@ -1,11 +1,11 @@
-// src/app/checkout/page.tsx
 import React from 'react';
 
 const CheckoutPage = () => {
   return (
     <div className="p-4">
       <h1 className="text-3xl font-bold mb-4">Checkout</h1>
-      {/* ฟอร์มการชำระเงินและข้อมูลผู้ใช้ */}
+      
+      {/* Checkout form for user to enter shipping details */}
       <form>
         <div className="mb-4">
           <label className="block mb-1">Name</label>

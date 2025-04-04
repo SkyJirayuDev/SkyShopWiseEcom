@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Order from '@/models/Order';
-import Cart from '@/models/Cart'; // ✅ เพิ่ม Cart model เพื่อเคลียร์ cart
+import Cart from '@/models/Cart'; 
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]/route';
 
+// POST method to place an order
 export async function POST(req: Request) {
   await connectToDatabase();
   try {
+    // Check if the user is authenticated
     const session = await getServerSession(authOptions);
     if (!session || !session.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { cartItems, total } = await req.json();
-
     if (!cartItems || cartItems.length === 0 || !total) {
       return NextResponse.json(
         { error: "Missing required fields: cartItems or total." },
@@ -22,12 +23,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check if the cart items are valid
     const orderItems = cartItems.map((item: any) => ({
       productId: item.productId,
       quantity: item.quantity,
       priceAtOrder: item.priceAtOrder,
     }));
 
+    // Check if the cart items exist in the database
     const newOrder = new Order({
       userId: session.user.id,
       items: orderItems,
@@ -38,7 +41,7 @@ export async function POST(req: Request) {
 
     await newOrder.save();
 
-    // ✅ เพิ่มคำสั่งล้าง cart หลังจากสั่งซื้อเสร็จ
+    // Clear the cart after placing the order
     await Cart.updateOne(
       { userId: session.user.id },
       { $set: { items: [] } }
@@ -51,6 +54,7 @@ export async function POST(req: Request) {
   }
 }
 
+// GET method to fetch orders for the authenticated user
 export async function GET(req: Request) {
   await connectToDatabase();
   try {

@@ -20,6 +20,7 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [sortOrder, setSortOrder] = useState<string>("default");
 
+  // Fetch products from the API
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -43,6 +44,7 @@ export default function ProductsPage() {
     fetchProducts();
   }, []);
 
+  // Handle search input change
   const filteredProducts = products
     .filter(
       (product) =>
@@ -94,6 +96,7 @@ export default function ProductsPage() {
 
       <h1 className="text-3xl font-bold text-center mb-6">All Products</h1>
 
+      {/* Products List */}
       {filteredProducts.length === 0 ? (
         <p className="text-center text-gray-500">No products found.</p>
       ) : (

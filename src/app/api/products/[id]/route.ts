@@ -1,28 +1,32 @@
-// /src/app/api/products/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Product from '@/models/Product';
 
+// GET method to fetch a single product by ID
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   await connectToDatabase();
 
+  // Check if the request is a GET request
   try {
     const { id } = params;
     const product = await Product.findById(id);
 
+    // Check if the product exists
     if (!product) {
       return NextResponse.json({ message: 'Product not found' }, { status: 404 });
     }
 
+    // Format the product data
     return NextResponse.json(product);
   } catch (error) {
     return NextResponse.json({ message: 'Failed to fetch product', error }, { status: 500 });
   }
 }
 
+// PUT method to update a product by ID
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -48,6 +52,7 @@ export async function PUT(
   }
 }
 
+// DELETE method to delete a product by ID
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } }

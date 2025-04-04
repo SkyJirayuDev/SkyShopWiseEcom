@@ -15,6 +15,7 @@ export default function AdminProductList() {
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState(0);
 
+  // Fetch products from the API
   useEffect(() => {
     const fetchProducts = async () => {
       const res = await fetch("/api/products");
@@ -24,12 +25,14 @@ export default function AdminProductList() {
     fetchProducts();
   }, []);
 
+  // Handle form submission for adding a new product
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setNewName(product.name);
     setNewPrice(product.price);
   };
 
+  // Handle form submission for updating a product
   const handleUpdate = async (id: string) => {
     const res = await fetch(`/api/products/${id}`, {
       method: "PUT",
@@ -41,6 +44,7 @@ export default function AdminProductList() {
     window.location.reload();
   };
 
+  // Handle product deletion
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this product?")) {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
