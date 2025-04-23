@@ -212,7 +212,7 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Why Shop at <span className="text-blue-700">SkyShopWise</span>?
+                HI SKY Why Shop at <span className="text-blue-700">SkyShopWise</span>?
               </h2>
               <div className="w-24 h-1 bg-blue-700 mx-auto rounded-full mb-6"></div>
               <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
