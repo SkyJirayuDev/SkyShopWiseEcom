@@ -6,7 +6,7 @@ export default function Chatbot() {
   const [isMinimized, setIsMinimized] = useState(true);
   const [userInput, setUserInput] = useState("");
   const [messages, setMessages] = useState<
-    { text: string; sender: "user" | "bot" }[]
+    { text: string | React.ReactNode; sender: "user" | "bot" }[]
   >([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -15,7 +15,7 @@ export default function Chatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Typing animation
+  // Typing animation for plain text
   const typeBotMessage = (text: string, callback: (msg: string) => void) => {
     let i = 0;
     const interval = setInterval(() => {
@@ -28,6 +28,7 @@ export default function Chatbot() {
     }, 20); // speed of typing
   };
 
+  // Function to handle sending messages
   const handleSend = async () => {
     if (!userInput.trim()) return;
 
@@ -44,18 +45,50 @@ export default function Chatbot() {
       const data = await response.json();
 
       // Add typing placeholder first
-      let animatedText = "";
       setMessages((prev) => [...prev, { text: "...", sender: "bot" }]);
 
       const isHtml = /<a\s+(.*?)>/i.test(data.aiMessage);
 
       if (isHtml) {
-        // Show HTML messages without animation
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { text: data.aiMessage, sender: "bot" };
-          return updated;
-        });
+        // Separate parts between text and link
+        const parts = data.aiMessage.split(/(<a.*?<\/a>)/g);
+        let composed: React.ReactNode[] = [];
+        let i = 0;
+
+        const interval = setInterval(() => {
+          if (i < parts.length) {
+            const part = parts[i];
+            if (/<a\s+(.*?)<\/a>/.test(part)) {
+              // Link → use as raw HTML
+              composed.push(
+                <span
+                  key={`link-${i}`}
+                  dangerouslySetInnerHTML={{ __html: part }}
+                />
+              );
+            } else {
+              // Normal text → show character by character
+              for (let j = 0; j < part.length; j++) {
+                composed.push(
+                  <span key={`char-${i}-${j}`}>{part[j]}</span>
+                );
+              }
+            }
+
+            setMessages((prev) => {
+              const updated = [...prev];
+              updated[updated.length - 1] = {
+                text: <>{composed}</>,
+                sender: "bot",
+              };
+              return updated;
+            });
+
+            i++;
+          } else {
+            clearInterval(interval);
+          }
+        }, 80); // speed between each part
       } else {
         // Animate typing for plain text
         let animatedText = "";
@@ -63,7 +96,10 @@ export default function Chatbot() {
           animatedText = typed;
           setMessages((prev) => {
             const updated = [...prev];
-            updated[updated.length - 1] = { text: animatedText, sender: "bot" };
+            updated[updated.length - 1] = {
+              text: animatedText,
+              sender: "bot",
+            };
             return updated;
           });
         });
@@ -79,6 +115,7 @@ export default function Chatbot() {
         isMinimized ? "w-16 h-16" : "w-80 h-[400px]"
       }`}
     >
+      {/* Minimized State */}
       {isMinimized ? (
         <div
           className="w-full h-full flex items-center justify-center bg-blue-600 rounded-full shadow-lg cursor-pointer"
@@ -88,6 +125,7 @@ export default function Chatbot() {
         </div>
       ) : (
         <div className="bg-white border rounded shadow-md flex flex-col h-full">
+          {/* Header */}
           <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-400 text-white p-2 rounded-t">
             <h1 className="text-lg font-bold">ShopWise Chatbot 🤖</h1>
             <button
@@ -98,6 +136,7 @@ export default function Chatbot() {
             </button>
           </div>
 
+          {/* Messages */}
           <div className="flex flex-col flex-1 p-2 overflow-y-auto bg-gray-50 space-y-2">
             {messages.map((msg, index) => (
               <div
@@ -109,10 +148,7 @@ export default function Chatbot() {
                 }`}
               >
                 {msg.sender === "bot" ? (
-                  <div
-                    className="text-sm whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: msg.text }}
-                  />
+                  <div className="text-sm whitespace-pre-wrap">{msg.text}</div>
                 ) : (
                   <p className="text-sm">{msg.text}</p>
                 )}
@@ -121,6 +157,7 @@ export default function Chatbot() {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Input */}
           <div className="p-2 border-t">
             <input
               type="text"
@@ -135,7 +172,6 @@ export default function Chatbot() {
               placeholder="Ask me anything..."
               className="w-full border p-2 rounded focus:outline-none focus:ring focus:ring-blue-300"
             />
-
             <button
               onClick={handleSend}
               className="w-full bg-blue-600 text-white mt-2 p-2 rounded hover:bg-blue-700 transition-colors"
