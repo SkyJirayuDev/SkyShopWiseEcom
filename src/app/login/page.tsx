@@ -8,6 +8,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const router = useRouter();
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const result = await signIn("credentials", {
@@ -16,6 +17,7 @@ export default function LoginPage() {
       password,
     });
 
+    // Handle the response
     if (result?.ok) {
       router.push("/");
     } else {
@@ -26,6 +28,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="max-w-md w-full bg-white p-8 shadow-md rounded">
+
+        {/* Form for user login */}
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">

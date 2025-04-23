@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 
+// Add custom fields to NextAuth session and user
 declare module "next-auth" {
   interface Session {
     user: {

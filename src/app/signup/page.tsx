@@ -8,6 +8,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const router = useRouter();
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const res = await fetch("/api/auth/register", {
@@ -15,6 +16,8 @@ export default function SignupPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password }),
     });
+
+    // Handle the response
     const data = await res.json();
     if (res.ok) {
       router.push("/login");
@@ -27,6 +30,8 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="max-w-md w-full bg-white p-8 shadow-md rounded">
         <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
+
+        {/* Form for user registration */}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block mb-1">Name</label>

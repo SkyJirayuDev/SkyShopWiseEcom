@@ -1,32 +1,26 @@
-// src/models/Order.ts
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from 'mongoose';
 
-export interface IOrder extends Document {
-  user: mongoose.Types.ObjectId; // เปลี่ยนจาก userId เป็น user (ObjectId) และอ้างอิง User model
-  items: {
-    productId: string;
-    name: string;
-    price: number;
-    quantity: number;
-    image: string;
-  }[];
-  total: number;
-  createdAt: Date;
-}
+// Define the schema for items in the order
+const orderProductSchema = new mongoose.Schema({
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' }, // Reference to Product model
+  quantity: Number,
+  priceAtOrder: Number
+});
 
-const OrderSchema = new Schema<IOrder>({
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  items: [
-    {
-      productId: { type: String, required: true },
-      name: { type: String, required: true },
-      price: { type: Number, required: true },
-      quantity: { type: Number, required: true },
-      image: { type: String, required: true },
-    },
-  ],
-  total: { type: Number, required: true },
-  createdAt: { type: Date, default: Date.now },
-});  
+// Define the schema for the order
+const orderSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Reference to User model
+  items: [orderProductSchema], // Array of products in the order
+  total: Number,
+  status: { type: String, default: 'pending' },
+  orderedAt: { type: Date, default: Date.now },
+  address: {
+    fullName: String,
+    street: String,
+    city: String,
+    postcode: String,
+    country: String
+  }
+});
 
-export default mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);
+export default mongoose.models.Order || mongoose.model('Order', orderSchema);

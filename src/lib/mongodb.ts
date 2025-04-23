@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+// This file is responsible for connecting to the MongoDB database.
 declare global {
   var mongoose: {
     conn: any;
@@ -7,17 +8,21 @@ declare global {
   };
 }
 
+// Check if the environment variable is defined
 const MONGODB_URI = process.env.MONGODB_URI;
 
+// Ensure the MongoDB URI is defined
 if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable in .env.local');
 }
 
+// Check if the connection is already cached
 let cached = global.mongoose;
 if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
+// Connect to MongoDB
 async function connectToDatabase() {
   if (cached.conn) {
     console.log("Using cached MongoDB connection");

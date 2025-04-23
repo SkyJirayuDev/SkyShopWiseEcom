@@ -1,12 +1,9 @@
-// updateProducts.ts
-
 interface ProductUpdate {
     _id: string;
     name: string;
     description: string;
   }
   
-  // อาร์เรย์สำหรับเก็บข้อมูลสินค้าที่ต้องการอัปเดต
   const productUpdates: ProductUpdate[] = [
     {
       _id: "67a56c252e294f353c873d10",
@@ -130,12 +127,11 @@ interface ProductUpdate {
     },
   ];
   
-  // ฟังก์ชันสำหรับอัปเดตสินค้าโดยส่ง PUT request ไปยัง API endpoint
   async function updateProducts(): Promise<void> {
     for (const product of productUpdates) {
       try {
         const response = await fetch(`http://localhost:3000/api/products/${product._id}`, {
-          method: "PUT", // ใช้ HTTP PUT สำหรับอัปเดตข้อมูล
+          method: "PUT", 
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: product.name,
@@ -150,6 +146,5 @@ interface ProductUpdate {
     }
   }
   
-  // เรียกใช้งานฟังก์ชันเพื่อเริ่มกระบวนการอัปเดตสินค้า
   updateProducts();
   

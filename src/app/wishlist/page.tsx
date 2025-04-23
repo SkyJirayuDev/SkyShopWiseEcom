@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 
+// This page is for displaying the user's wishlist
 interface WishlistItem {
   _id: string;
   product?: {
@@ -20,6 +21,7 @@ export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [error, setError] = useState<string>("");
 
+  // Fetch wishlist items when the component mounts or when the session changes
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
@@ -29,6 +31,7 @@ export default function WishlistPage() {
     fetchWishlist();
   }, [session, status]);
 
+  // Function to fetch wishlist items from the server
   const fetchWishlist = async () => {
     try {
       const response = await fetch("/api/wishlist", { method: "GET" });
@@ -36,7 +39,18 @@ export default function WishlistPage() {
         throw new Error("Failed to fetch wishlist items");
       }
       const data = await response.json();
-      setWishlistItems(data);
+
+      // Remove duplicate products based on product._id
+      const uniqueItems = data.filter(
+        (item: WishlistItem, index: number, self: WishlistItem[]) =>
+          item.product &&
+          index ===
+            self.findIndex(
+              (t) => t.product && t.product._id === item.product?._id
+            )
+      );
+
+      setWishlistItems(uniqueItems);
     } catch (error: any) {
       console.error("Error fetching wishlist:", error);
       setError(error.message || "Failed to fetch wishlist items");
@@ -62,7 +76,9 @@ export default function WishlistPage() {
         <p>No items in wishlist.</p>
       ) : (
         wishlistItems.map((item) => (
-          <div key={item._id} className="border p-4 mb-4 rounded shadow">
+          <div key={item.product?._id} className="border p-4 mb-4 rounded shadow">
+
+            {/* Display product details */}
             {item.product ? (
               <>
                 <img
@@ -78,6 +94,8 @@ export default function WishlistPage() {
                 <p className="text-gray-500">Product not available</p>
               </div>
             )}
+
+            {/* Remove from wishlist button */}
             <button
               onClick={async () => {
                 try {
@@ -94,7 +112,7 @@ export default function WishlistPage() {
                   }
                   toast.success("Removed from wishlist!");
                   setWishlistItems((prev) =>
-                    prev.filter((w) => w._id !== item._id)
+                    prev.filter((w) => w.product?._id !== item.product?._id)
                   );
                 } catch (err) {
                   console.error(err);

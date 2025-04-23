@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 
+// CartItem component
 interface CartItemProps {
   item: {
     _id: string;

@@ -1,4 +1,3 @@
-// src/app/api/auth/[...nextauth]/route.ts
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@next-auth/mongodb-adapter";
@@ -8,14 +7,17 @@ import bcrypt from "bcryptjs";
 import type { JWT } from "next-auth/jwt";
 import type { Session } from "next-auth";
 
+// This is the route for NextAuth authentication
 export const authOptions = {
   providers: [
+    // Credentials provider for email and password authentication
     CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
+      // The authorize function is called when the user submits the form
       async authorize(credentials) {
         if (!credentials) return null;
         const { email, password } = credentials;
@@ -27,14 +29,16 @@ export const authOptions = {
       },
     }),
   ],
+  // Use MongoDB adapter for NextAuth
   adapter: MongoDBAdapter(clientPromise),
   session: {
-    strategy: "jwt" as const,
+    strategy: "jwt" as const, // Use JWT for session management
   },
-  // เพิ่มส่วนนี้เพื่อระบุหน้า login ที่ต้องการใช้เป็น custom sign in page
   pages: {
-    signIn: "/login",
+    signIn: "/login", 
   },
+
+  // Callbacks for JWT and session management
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: any }): Promise<JWT> {
       if (user) {
@@ -61,5 +65,4 @@ export const authOptions = {
 
 const handler = NextAuth(authOptions);
 
-// Export named exports สำหรับ HTTP methods
 export { handler as GET, handler as POST };

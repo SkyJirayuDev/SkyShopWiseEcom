@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+// Define the User interface that extends Document from mongoose
 interface IUser extends Document {
   name: string;
   email: string;
@@ -8,6 +9,7 @@ interface IUser extends Document {
   createdAt: Date;
 }
 
+// Define the schema for the User model
 const UserSchema = new Schema<IUser>({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
