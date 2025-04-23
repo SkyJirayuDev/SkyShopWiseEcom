@@ -131,12 +131,14 @@ export default function Navbar() {
           <div className="flex flex-col space-y-4 pt-4">
             <Link
               href="/"
+              onClick={() => setIsMenuOpen(false)}
               className="hover:text-blue-500 py-2 transform transition-transform duration-200 hover:translate-x-2"
             >
               Home
             </Link>
             <Link
               href="/products"
+              onClick={() => setIsMenuOpen(false)}
               className="hover:text-blue-500 py-2 transform transition-transform duration-200 hover:translate-x-2"
             >
               Products
@@ -147,18 +149,21 @@ export default function Navbar() {
               <>
                 <Link
                   href="/orders"
+                  onClick={() => setIsMenuOpen(false)}
                   className="hover:text-blue-500 py-2 transform transition-transform duration-200 hover:translate-x-2"
                 >
                   Order History
                 </Link>
                 <Link
                   href="/wishlist"
+                  onClick={() => setIsMenuOpen(false)}
                   className="hover:text-blue-500 py-2 transform transition-transform duration-200 hover:translate-x-2"
                 >
                   Wishlist
                 </Link>
                 <Link
                   href="/cart"
+                  onClick={() => setIsMenuOpen(false)}
                   className="relative hover:text-blue-500 py-2 transform transition-transform duration-200 hover:translate-x-2"
                 >
                   Cart
@@ -184,6 +189,7 @@ export default function Navbar() {
                     );
                     if (confirmed) {
                       signOut();
+                      setIsMenuOpen(false); // Close menu on logout
                     }
                   }}
                   className="hover:text-blue-500 py-2 text-left transform transition-transform duration-200 hover:translate-x-2"
@@ -194,13 +200,17 @@ export default function Navbar() {
             ) : (
               <>
                 <button
-                  onClick={() => signIn()}
+                  onClick={() => {
+                    signIn();
+                    setIsMenuOpen(false); // Close menu on login
+                  }}
                   className="hover:text-blue-500 py-2 text-left transform transition-transform duration-200 hover:translate-x-2"
                 >
                   Login
                 </button>
                 <Link
                   href="/signup"
+                  onClick={() => setIsMenuOpen(false)}
                   className="hover:text-blue-500 py-2 transform transition-transform duration-200 hover:translate-x-2"
                 >
                   Sign Up

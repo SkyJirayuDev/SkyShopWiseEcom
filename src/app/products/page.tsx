@@ -64,7 +64,6 @@ export default function ProductsPage() {
     <div className="container mx-auto p-4">
       {/* Search, Filter, Sort */}
       <div className="flex flex-col gap-4 mb-6">
-        {/* Search: อยู่บรรทัดบน เต็มความกว้าง */}
         <input
           type="text"
           placeholder="Search for products..."
@@ -72,8 +71,6 @@ export default function ProductsPage() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="border border-gray-300 p-2 rounded-md w-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
-
-        {/* Category + Sort: อยู่บรรทัดล่างในแถวเดียวกัน */}
         <div className="flex flex-row gap-4">
           <select
             value={selectedCategory}

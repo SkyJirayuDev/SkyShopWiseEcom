@@ -1,39 +1,62 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
-// Chatbot component
 export default function Chatbot() {
   const [isMinimized, setIsMinimized] = useState(true);
   const [userInput, setUserInput] = useState("");
   const [messages, setMessages] = useState<
-
     { text: string; sender: "user" | "bot" }[]
   >([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Function to handle sending messages
+  // Scroll to bottom when new message is added
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Typing animation
+  const typeBotMessage = (text: string, callback: (msg: string) => void) => {
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < text.length) {
+        callback(text.slice(0, i + 1));
+        i++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 20); // speed of typing
+  };
+
   const handleSend = async () => {
     if (!userInput.trim()) return;
 
-    setMessages((prev) => [...prev, { text: userInput, sender: "user" }]);
+    const input = userInput;
+    setUserInput(""); // Clear input immediately
+    setMessages((prev) => [...prev, { text: input, sender: "user" }]);
 
     try {
       const response = await fetch("/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userInput }),
+        body: JSON.stringify({ userInput: input }),
       });
       const data = await response.json();
 
-      setMessages((prev) => [
-        ...prev,
-        { text: data.aiMessage, sender: "bot" },
-      ]);
+      // Add typing placeholder first
+      let animatedText = "";
+      setMessages((prev) => [...prev, { text: "...", sender: "bot" }]);
+
+      typeBotMessage(data.aiMessage, (typed) => {
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { text: typed, sender: "bot" };
+          return updated;
+        });
+      });
     } catch (error) {
       console.error("Error:", error);
     }
-
-    setUserInput("");
   };
 
   return (
@@ -42,7 +65,6 @@ export default function Chatbot() {
         isMinimized ? "w-16 h-16" : "w-80 h-[400px]"
       }`}
     >
-      {/* Minimized State */}
       {isMinimized ? (
         <div
           className="w-full h-full flex items-center justify-center bg-blue-600 rounded-full shadow-lg cursor-pointer"
@@ -52,8 +74,6 @@ export default function Chatbot() {
         </div>
       ) : (
         <div className="bg-white border rounded shadow-md flex flex-col h-full">
-
-          {/* Header */}
           <div className="flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-400 text-white p-2 rounded-t">
             <h1 className="text-lg font-bold">ShopWise Chatbot 🤖</h1>
             <button
@@ -64,7 +84,6 @@ export default function Chatbot() {
             </button>
           </div>
 
-          {/* Messages */}
           <div className="flex flex-col flex-1 p-2 overflow-y-auto bg-gray-50 space-y-2">
             {messages.map((msg, index) => (
               <div
@@ -75,27 +94,27 @@ export default function Chatbot() {
                     : "bg-green-100 mr-auto text-left"
                 }`}
               >
-                {msg.sender === "bot" ? (
-                  <div
-                    className="text-sm"
-                    dangerouslySetInnerHTML={{ __html: msg.text }}
-                  />
-                ) : (
-                  <p className="text-sm">{msg.text}</p>
-                )}
+                <p className="text-sm">{msg.text}</p>
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
-          
-          {/* Input */}
+
           <div className="p-2 border-t">
             <input
               type="text"
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault(); 
+                  handleSend(); 
+                }
+              }}
               placeholder="Ask me anything..."
               className="w-full border p-2 rounded focus:outline-none focus:ring focus:ring-blue-300"
             />
+
             <button
               onClick={handleSend}
               className="w-full bg-blue-600 text-white mt-2 p-2 rounded hover:bg-blue-700 transition-colors"

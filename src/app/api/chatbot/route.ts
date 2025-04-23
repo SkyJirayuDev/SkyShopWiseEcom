@@ -4,25 +4,29 @@ import Product from "@/models/Product";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, 
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 // Connect to the database
 export async function POST(req: Request) {
   await connectToDatabase();
-  try {
-    const { userInput } = await req.json(); // Extract user input from the request body
-    const products = await Product.find({}).lean(); // Fetch all products from the database
-    let productContext: string = ""; // Initialize an empty string for product context
 
-    // Iterate over each product and format its details
-    products.forEach((product: any): void => {
+  try {
+    const { userInput } = await req.json();
+    const products = await Product.find({}).lean();
+
+    let productContext = "";
+    products.forEach((product: any) => {
       productContext += `ID: ${product._id}\nName: ${product.name}\nDescription: ${product.description}\nCategory: ${product.category}\nPrice: $${product.price}\n\n`;
     });
-    const baseUrl: string = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"; 
 
-    // Construct the system message for the AI model
-    const systemMessage: string = `You are a friendly and knowledgeable shopping assistant.
+    // Updated to use production URL
+    const baseUrl: string =
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  process.env.NEXTAUTH_URL || // fallback to NEXTAUTH_URL if NEXT_PUBLIC_BASE_URL not set
+  "http://localhost:3000"; // final fallback for dev
+
+    const systemMessage = `You are a friendly and knowledgeable shopping assistant.
 Your task is to answer the customer's query using only the product information provided below.
 Each product is described with its ID, Name, Description, Category, and Price.
 
@@ -49,23 +53,23 @@ Instructions:
 
 Please provide your answer accordingly.`;
 
-    // Log the system message for debugging
     const messages = [
       { role: "system", content: systemMessage },
       { role: "user", content: userInput },
     ];
 
-    // Call the OpenAI API to get the AI's response
     const chatResponse = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: messages as unknown as any,
     });
 
-    // Log the AI's response for debugging
     const aiMessage: string = chatResponse.choices[0]?.message.content || "";
     return NextResponse.json({ aiMessage });
   } catch (error) {
     console.error("Error in chatbot API:", error);
-    return NextResponse.json({ error: "Failed to process chatbot request" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to process chatbot request" },
+      { status: 500 }
+    );
   }
 }
