@@ -49,7 +49,9 @@ export default function ProductsPage() {
     .filter(
       (product) =>
         (product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
+          product.description
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())) &&
         (selectedCategory === "All" || product.category === selectedCategory)
     )
     .sort((a, b) => {
@@ -61,37 +63,43 @@ export default function ProductsPage() {
   return (
     <div className="container mx-auto p-4">
       {/* Search, Filter, Sort */}
-      <div className="flex justify-center mb-6 space-x-4">
+      <div className="flex flex-col gap-4 mb-6">
+        {/* Search: อยู่บรรทัดบน เต็มความกว้าง */}
         <input
           type="text"
           placeholder="Search for products..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="border border-gray-300 p-2 rounded-md w-1/3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="border border-gray-300 p-2 rounded-md w-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="text-gray-600 border p-2 rounded shadow-sm"
-        >
-          <option value="All">All Categories</option>
-          <option value="Accessories">Accessories</option>
-          <option value="Audio">Audio</option>
-          <option value="Cameras">Cameras</option>
-          <option value="Gaming">Gaming</option>
-          <option value="Laptops">Laptops</option>
-          <option value="Monitors">Monitors</option>
-          <option value="Storage">Storage</option>
-        </select>
-        <select
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-          className="text-gray-600 border p-2 rounded shadow-sm"
-        >
-          <option value="default">Sort By</option>
-          <option value="asc">Price: Low to High</option>
-          <option value="desc">Price: High to Low</option>
-        </select>
+
+        {/* Category + Sort: อยู่บรรทัดล่างในแถวเดียวกัน */}
+        <div className="flex flex-row gap-4">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="flex-1 text-gray-600 border p-2 rounded shadow-sm"
+          >
+            <option value="All">All Categories</option>
+            <option value="Accessories">Accessories</option>
+            <option value="Audio">Audio</option>
+            <option value="Cameras">Cameras</option>
+            <option value="Gaming">Gaming</option>
+            <option value="Laptops">Laptops</option>
+            <option value="Monitors">Monitors</option>
+            <option value="Storage">Storage</option>
+          </select>
+
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="flex-1 text-gray-600 border p-2 rounded shadow-sm"
+          >
+            <option value="default">Sort By</option>
+            <option value="asc">Price: Low to High</option>
+            <option value="desc">Price: High to Low</option>
+          </select>
+        </div>
       </div>
 
       <h1 className="text-3xl font-bold text-center mb-6">All Products</h1>

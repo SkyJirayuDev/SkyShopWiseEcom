@@ -133,7 +133,7 @@ export default function HomePage() {
           <section className="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-700 text-white py-8 px-6 sm:px-8 md:px-16 rounded-b-3xl shadow-xl">
             <div className="max-w-5xl mx-auto text-center">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 flex items-center justify-center gap-2">
-                🎁 <span>Personalized Deal Just for You</span>
+                <span>Personalized Deal Just for You</span>
               </h2>
 
               {/* Main message from AI - split into lines */}
@@ -162,7 +162,7 @@ export default function HomePage() {
                 onClick={() => fetchPersonalMessage(true)}
                 className="mt-6 bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-6 py-2 rounded-full text-base transition duration-300 shadow-md"
               >
-                🔄 Refresh Deal
+                Refresh Deal
               </button> */}
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 w-full px-2 sm:px-4 mt-6">
