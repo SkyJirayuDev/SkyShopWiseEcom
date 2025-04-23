@@ -47,13 +47,27 @@ export default function Chatbot() {
       let animatedText = "";
       setMessages((prev) => [...prev, { text: "...", sender: "bot" }]);
 
-      typeBotMessage(data.aiMessage, (typed) => {
+      const isHtml = /<a\s+(.*?)>/i.test(data.aiMessage);
+
+      if (isHtml) {
+        // Show HTML messages without animation
         setMessages((prev) => {
           const updated = [...prev];
-          updated[updated.length - 1] = { text: typed, sender: "bot" };
+          updated[updated.length - 1] = { text: data.aiMessage, sender: "bot" };
           return updated;
         });
-      });
+      } else {
+        // Animate typing for plain text
+        let animatedText = "";
+        typeBotMessage(data.aiMessage, (typed) => {
+          animatedText = typed;
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { text: animatedText, sender: "bot" };
+            return updated;
+          });
+        });
+      }
     } catch (error) {
       console.error("Error:", error);
     }
@@ -94,7 +108,14 @@ export default function Chatbot() {
                     : "bg-green-100 mr-auto text-left"
                 }`}
               >
-                <p className="text-sm">{msg.text}</p>
+                {msg.sender === "bot" ? (
+                  <div
+                    className="text-sm whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: msg.text }}
+                  />
+                ) : (
+                  <p className="text-sm">{msg.text}</p>
+                )}
               </div>
             ))}
             <div ref={messagesEndRef} />
@@ -107,8 +128,8 @@ export default function Chatbot() {
               onChange={(e) => setUserInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  e.preventDefault(); 
-                  handleSend(); 
+                  e.preventDefault();
+                  handleSend();
                 }
               }}
               placeholder="Ask me anything..."
