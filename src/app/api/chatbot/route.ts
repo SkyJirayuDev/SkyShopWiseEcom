@@ -5,8 +5,10 @@ import connectToDatabase from "@/lib/mongodb";
 import Product from "@/models/Product";
 import OpenAI from "openai";
 
+// Initialize OpenAI API with secret key
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Generate intro and closing sentences for product recommendations
 async function generateContextText(userInput: string, category?: string) {
   const prompt = `
 You are a helpful shopping assistant.
@@ -26,6 +28,7 @@ Only return JSON format:
 `;
 
   try {
+    // Request GPT to generate intro and closing text
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
@@ -48,18 +51,20 @@ Only return JSON format:
 }
 
 export async function POST(req: Request) {
-  await connectToDatabase();
+  await connectToDatabase(); // Connect to MongoDB database
 
   try {
     const { userInput } = await req.json();
     const trimmed = userInput.trim();
 
+    // Handle simple greetings immediately
     if (/^(hi|hello|hey)[\s!]*$/i.test(trimmed)) {
       return NextResponse.json({
         aiMessage: "Hello! How can I assist you today? 😊",
       });
     }
 
+    // Classify user intent: greeting, product search, or other
     const classifyResp = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
@@ -94,6 +99,7 @@ export async function POST(req: Request) {
       } catch {}
     }
 
+    // If the input is not product_search, reply normally
     if (intent !== "product_search") {
       const chatResp = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
@@ -107,6 +113,7 @@ export async function POST(req: Request) {
       });
     }
 
+    // Extract product keywords and price conditions from user input
     const slotResp = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
@@ -142,6 +149,7 @@ export async function POST(req: Request) {
       function_call: { name: "extract_product_info" },
     });
 
+    // Parse extracted information
     let product: string | undefined;
     let category: string | undefined;
     let priceCondition: { type: string; amount: number } | undefined;
@@ -155,12 +163,14 @@ export async function POST(req: Request) {
       } catch {}
     }
 
+    // Find matching products in database
     const products = await Product.find({}).lean();
     let matches = products.filter((p) => {
       let ok = true;
       const lowerName = p.name.toLowerCase();
       const lowerCat = p.category.toLowerCase();
 
+      // Match by product name or category
       if (product) {
         const key = product.toLowerCase();
         ok = lowerName.includes(key) || lowerCat.includes(key);
@@ -176,6 +186,7 @@ export async function POST(req: Request) {
       return ok;
     });
 
+    // If no matches, retry matching by splitting product keywords
     if (matches.length === 0 && product) {
       const tokens = product.toLowerCase().split(" ").filter(Boolean);
       matches = products.filter((p) =>
@@ -186,8 +197,10 @@ export async function POST(req: Request) {
     }
 
     if (matches.length > 0) {
+      // If matches found, generate context text
       const context = await generateContextText(userInput, category || product);
 
+      // Build the AI message response
       const aiMessage = {
         type: "productList",
         header: "Here are the products I found 😊",
@@ -202,6 +215,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json({ aiMessage });
     } else {
+      // No products found
       return NextResponse.json({
         aiMessage:
           "Sorry, I couldn't find any products that match your criteria. Could you provide more details or adjust your search?",
