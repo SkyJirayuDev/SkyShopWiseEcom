@@ -16,7 +16,7 @@ interface Product {
 const ProductDetailPage = () => {
   const params = useParams();
   const id = params?.id as string;
-  const { data: session } = useSession(); 
+  const { data: session } = useSession();
   const [product, setProduct] = useState<Product | null>(null);
 
   // Fetch product details from the API
@@ -48,7 +48,7 @@ const ProductDetailPage = () => {
     }
   }, [id, session]);
 
-  // Handle adding product to cart and wishlist
+  // Handle adding product to cart
   const handleAddToCart = async () => {
     try {
       const response = await fetch("/api/cart", {
@@ -95,30 +95,34 @@ const ProductDetailPage = () => {
   if (!product) return <p>Loading...</p>;
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold">{product.name}</h1>
-      <div className="w-full aspect-video bg-gray-100 flex items-center justify-center overflow-hidden rounded">
+    <div className="max-w-3xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6 text-center">{product.name}</h1>
+
+      <div className="w-full flex items-center justify-center overflow-hidden rounded-lg bg-gray-100 p-4 shadow-md">
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-contain"
+          className="max-w-[500px] w-full h-auto object-contain"
         />
       </div>
-      <p className="mt-4">{product.description}</p>
-      <p className="font-bold text-xl mt-2">${product.price}</p>
 
-      <button
-        onClick={handleAddToCart}
-        className="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-      >
-        Add to Cart
-      </button>
-      <button
-        onClick={handleAddToWishlist}
-        className="mt-2 ml-2 bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-600"
-      >
-        💟
-      </button>
+      <p className="mt-6 text-gray-700">{product.description}</p>
+      <p className="font-bold text-2xl mt-4">${product.price.toFixed(2)}</p>
+
+      <div className="flex gap-4 mt-6">
+        <button
+          onClick={handleAddToCart}
+          className="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+        >
+          Add to Cart
+        </button>
+        <button
+          onClick={handleAddToWishlist}
+          className="flex-1 bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-600 transition"
+        >
+          Add to Wishlist
+        </button>
+      </div>
     </div>
   );
 };
